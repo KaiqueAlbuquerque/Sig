@@ -5,7 +5,7 @@ import { StyleSheet,
         Dimensions,
         Image,
         TouchableOpacity, 
-        Alert,
+        StatusBar,
         Text
     } from 'react-native';
 
@@ -17,7 +17,14 @@ export default class HomeScreen extends Component{
         this.props.navigation.navigate('Home');
     }
 
+    componentDidMount(){
+        StatusBar.setBarStyle('light-content',true);
+        StatusBar.setBackgroundColor("#196280");
+    };
+      
+
     render() {
+        
         return(
             <View style={styles.container}>
                 <View style={styles.topo}>
