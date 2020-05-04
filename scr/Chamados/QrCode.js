@@ -3,7 +3,6 @@ import { Text, View, Dimensions, StyleSheet } from 'react-native';
 
 import QRCodeScanner from "react-native-qrcode-scanner";
 
-
 export default class QrCode extends Component {
     state = {
       url: '',
@@ -56,6 +55,6 @@ export default class QrCode extends Component {
     },
     
     cameraContainer: {
-      height: Dimensions.get('window').height,
+      height: Dimensions.get('window').height / 2,
     }  
   });
