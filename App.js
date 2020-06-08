@@ -1,6 +1,9 @@
 import { createStackNavigator, createAppContainer } from "react-navigation";
 
-import Login from './scr/Login/Login';
+import LoginEmailScreen from './scr/Login/LoginEmail.js';
+import LoginSignatureScreen from './scr/Login/LoginSignature.js';
+import LoginPasswordScreen from './scr/Login/LoginPassword.js';
+
 import HomeScreen from './scr/Home/HomeScreen.js';
 import NovoChamado from './scr/Chamados/NovoChamado.js';
 import QrCode from './scr/Chamados/QrCode.js';
@@ -8,8 +11,20 @@ import AgendaPedidos from './scr/Pedidos/AgendaPedidos.js';
 
 const RootStack = createStackNavigator(
   {
-    Login: {
-      screen: Login,
+    LoginEmail: {
+      screen: LoginEmailScreen,
+      navigationOptions: () => ({
+        header: null
+      }),
+    },
+    LoginSignature: {
+      screen: LoginSignatureScreen,
+      navigationOptions: () => ({
+        header: null
+      }),
+    },
+    LoginPassword: {
+      screen: LoginPasswordScreen,
       navigationOptions: () => ({
         header: null
       }),
@@ -40,7 +55,7 @@ const RootStack = createStackNavigator(
     }
   },
   {
-    initialRouteName: "Login"
+    initialRouteName: "LoginEmail"
   }
 );
 

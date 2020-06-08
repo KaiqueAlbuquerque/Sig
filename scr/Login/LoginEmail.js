@@ -11,44 +11,43 @@ import { StyleSheet,
 
 const width = Dimensions.get('screen').width;
 
-export default class HomeScreen extends Component{
+export default class LoginEmailScreen extends Component{
 
-    ButtonClickCheckFunction = () =>{
-        this.props.navigation.navigate('Home');
+    buttonNext = () => {
+        this.props.navigation.navigate('LoginSignature', {login: this.state.login});
     }
 
     componentDidMount(){
         StatusBar.setBarStyle('light-content',true);
         StatusBar.setBackgroundColor("#196280");
-    };
-      
+    };      
 
     render() {
         
         return(
             <View style={styles.container}>
-                <View style={styles.topo}>
+                <View style={styles.top}>
                     <Image style={styles.logo} 
                         source={require('../../img/logo.png')}/>
                 </View>
-                <View style={styles.baixo}>
+                <View style={styles.bottom}>
+                    <Text style={styles.stage}>Etapa 1 de 3</Text>
                     <View style={styles.form}>                    
-                        <TextInput style={styles.input} 
-                            placeholder="Usuário..."
-                            onChangeText={texto => this.setState({usuario: texto})}/>
-                        <TextInput style={styles.input} 
-                            placeholder="Senha..."
-                            onChangeText={texto => this.setState({senha: texto})}/>    
+                        <Text style={styles.labelForm}>Login</Text>    
+                        <View style={styles.viewInput}>
+                            <TextInput style={styles.input} 
+                                placeholder="exemplo@exemplo.com"
+                                onChangeText={text => this.setState({login: text})}/>
+                        </View>                        
                     </View>
-                    <View style={styles.botao}>
+                    <View style={styles.button}>
                         <TouchableOpacity
-                            style={styles.SubmitButtonStyle}
+                            style={styles.nextButton}
                             activeOpacity = { .5 }
-                            onPress={ this.ButtonClickCheckFunction }
+                            onPress={ this.buttonNext }
                         >
-                            <Text style={styles.TextStyle}>Login</Text>
+                            <Text style={styles.nextText}>Próximo</Text>
                         </TouchableOpacity>
-                        <Text style={styles.btnEsqueci}>Esqueci minha senha</Text>
                     </View>                    
                 </View>
             </View>
@@ -60,7 +59,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1
     },
-    topo: {
+    top: {
         flex: 2,
         alignItems: 'center',
         justifyContent: 'center'
@@ -69,23 +68,37 @@ const styles = StyleSheet.create({
         width: width, 
         height: 100
     },  
-    baixo: {
-        flex: 3,
+    bottom: {
+        flex: 5,
         alignItems: 'center'
+    },
+    stage: {
+        marginBottom: 50, 
+        fontSize: 15
     },
     form: {
         flex: 1,
         width: width * 0.8
     },
+    labelForm: {
+        marginBottom: 5
+    },
+    viewInput: {
+        borderRadius: 10, 
+        borderWidth: 1, 
+        borderColor: '#bdc3c7', 
+        overflow: 'hidden', 
+        marginBottom: 20
+    },
     input: {
         borderBottomWidth: 1,
         borderBottomColor: '#ddd'
     },
-    botao: {
+    button: {
         flex: 1,
-        width: width * 0.8
+        width: width
     },
-    SubmitButtonStyle: {
+    nextButton: {
         marginTop:10,
         paddingTop:15,
         paddingBottom:15,
@@ -96,13 +109,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#fff'
     },    
-    TextStyle:{
+    nextText:{
         color:'#fff',
         textAlign:'center',
-    },
-    btnEsqueci: {
-        marginTop: 20,
-        color:'#808080',
-        textAlign:'center'
     }
 })
