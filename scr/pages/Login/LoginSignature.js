@@ -1,39 +1,36 @@
 import React, {Component} from 'react';
 import { StyleSheet, 
         View, 
-        TextInput,
         Dimensions,
         Image,
         TouchableOpacity,
         Text,
-        Switch
+        Picker
     } from 'react-native';
-
-import { Icon } from 'react-native-elements';
 
 const width = Dimensions.get('screen').width;
 
-export default class LoginPasswordScreen extends Component{
+export default class LoginSignatureScreen extends Component{
 
-    constructor(props) {
+    constructor(props){
         super(props);
-        
-        this.toggleSwitch = this.toggleSwitch.bind(this);
+
         this.state = {
-          showPassword: true,
+            login: props.navigation.state.params.login, 
+            language: 'Default'
         }
     }
 
-    toggleSwitch() {
-        this.setState({ showPassword: !this.state.showPassword });
-    }
-
     buttonNext = () => { 
-        this.props.navigation.navigate('Home');
+        this.props.navigation.navigate('LoginPassword');
     }
 
     buttonBack = () => {
-        this.props.navigation.navigate('LoginSignature');
+        this.props.navigation.navigate('LoginEmail');
+    }
+
+    componentDidMount() {
+        console.log(this.state.login);
     }
 
     render() {
@@ -42,23 +39,25 @@ export default class LoginPasswordScreen extends Component{
             <View style={styles.container}>
                 <View style={styles.top}>
                     <Image style={styles.logo} 
-                        source={require('../../img/logo.png')}/>
+                        source={require('../../assets/img/logo.png')}/>
                 </View>
                 <View style={styles.bottom}>
-                <Text style={styles.stage}>Etapa 3 de 3</Text>
-                    <View style={styles.form}>                    
-                        <Text style={styles.labelForm}>Senha</Text>    
+                    <Text style={styles.stage}>Etapa 2 de 3</Text>
+                    <View style={styles.form}>    
+                        <Text style={styles.labelForm}>Selecione a Assinatura</Text>
                         <View style={styles.viewInput}>
-                            <View style={styles.viewInputIcon}>
-                                <TextInput style={styles.input} 
-                                    placeholder="Senha..."
-                                    secureTextEntry={this.state.showPassword}
-                                    onChangeText={text => this.setState({password: text})}
-                                />
-                                <Icon name="remove-red-eye" color="#000" onPress={() => !this.toggleSwitch() } />
-                            </View>
+                            <Picker
+                                style={pickerStyle}
+                                selectedValue={this.state.language}
+                                onValueChange={(itemValue, itemIndex) =>
+                                    this.setState({language: itemValue})
+                                }>
+                                <Picker.Item label="LWM" value="toyota" />
+                                <Picker.Item label="Honda" value="honda" />
+                            </Picker>
                         </View>
                     </View>
+                    
                     <View style={styles.button}>
                         <TouchableOpacity
                             style={styles.nextButton}
@@ -80,6 +79,35 @@ export default class LoginPasswordScreen extends Component{
         );
     }
 }
+
+const pickerStyle = {
+	inputIOS: {
+		color: 'white',
+		paddingTop: 13,
+		paddingHorizontal: 10,
+		paddingBottom: 12,
+	},
+	inputAndroid: {
+		color: 'white',
+    },
+    fontSize: 30,
+	placeholderColor: 'white',
+	underline: { borderTopWidth: 0 },
+	icon: {
+		position: 'absolute',
+		backgroundColor: 'transparent',
+		borderTopWidth: 5,
+		borderTopColor: '#00000099',
+		borderRightWidth: 5,
+		borderRightColor: 'transparent',
+		borderLeftWidth: 5,
+		borderLeftColor: 'transparent',
+		width: 0,
+		height: 0,
+		top: 20,
+		right: 15,
+	},
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -113,19 +141,11 @@ const styles = StyleSheet.create({
         borderWidth: 1, 
         borderColor: '#bdc3c7', 
         overflow: 'hidden', 
-        marginBottom: 20, 
-        paddingRight: 10 
-    },
-    viewInputIcon: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#fff',
+        marginBottom: 20
     },
     input: {
         borderBottomWidth: 1,
-        borderBottomColor: '#ddd',
-        width: width * 0.7
+        borderBottomColor: '#ddd'
     },
     button: {
         flex: 1,
@@ -160,5 +180,5 @@ const styles = StyleSheet.create({
     backText: {
         color: '#000',
         textAlign:'center'
-    }    
+    }
 })

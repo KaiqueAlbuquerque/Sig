@@ -28,7 +28,7 @@ export default class LoginEmailScreen extends Component{
             <View style={styles.container}>
                 <View style={styles.top}>
                     <Image style={styles.logo} 
-                        source={require('../../img/logo.png')}/>
+                        source={require('../../assets/img/logo.png')}/>
                 </View>
                 <View style={styles.bottom}>
                     <Text style={styles.stage}>Etapa 1 de 3</Text>

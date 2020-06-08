@@ -1,13 +1,13 @@
 import { createStackNavigator, createAppContainer } from "react-navigation";
 
-import LoginEmailScreen from './scr/Login/LoginEmail.js';
-import LoginSignatureScreen from './scr/Login/LoginSignature.js';
-import LoginPasswordScreen from './scr/Login/LoginPassword.js';
+import LoginEmailScreen from './scr/pages/Login/LoginEmail.js';
+import LoginSignatureScreen from './scr/pages/Login/LoginSignature.js';
+import LoginPasswordScreen from './scr/pages/Login/LoginPassword.js';
 
-import HomeScreen from './scr/Home/HomeScreen.js';
-import NovoChamado from './scr/Chamados/NovoChamado.js';
-import QrCode from './scr/Chamados/QrCode.js';
-import AgendaPedidos from './scr/Pedidos/AgendaPedidos.js';
+import HomeScreen from './scr/pages/Home/HomeScreen.js';
+import NovoChamado from './scr/pages/Chamados/NovoChamado.js';
+import QrCode from './scr/pages/Chamados/QrCode.js';
+import AgendaPedidos from './scr/pages/Pedidos/AgendaPedidos.js';
 
 const RootStack = createStackNavigator(
   {
