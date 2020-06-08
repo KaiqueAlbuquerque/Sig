@@ -5,10 +5,12 @@ import { StyleSheet,
         Dimensions,
         Image,
         TouchableOpacity,
-        Text
+        Text,
+        Alert
     } from 'react-native';
 
 import { Icon } from 'react-native-elements';
+import CrudService from '../../services/Crud/CrudService.js';
 
 const width = Dimensions.get('screen').width;
 
@@ -16,10 +18,15 @@ export default class LoginPasswordScreen extends Component{
 
     constructor(props) {
         super(props);
-        
+
         this.toggleSwitch = this.toggleSwitch.bind(this);
+        
         this.state = {
           showPassword: true,
+          loginRequest: {
+            email: props.navigation.state.params.login,
+            signatureId: props.navigation.state.params.signature
+          }
         }
     }
 
@@ -27,8 +34,57 @@ export default class LoginPasswordScreen extends Component{
         this.setState({ showPassword: !this.state.showPassword });
     }
 
-    buttonNext = () => { 
-        this.props.navigation.navigate('Home');
+    buttonNext = async () => { 
+        let password = this.state.loginRequest.password;
+        if(password == ''){
+            Alert.alert(
+                "Dados inválidos",
+                "Informe a senha.",
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            let crudService = new CrudService();
+            let result = await crudService.post(`auth/login`, this.state.loginRequest);
+            
+            if(result.status == 200)
+                this.props.navigation.navigate('Home');
+            
+            else if(result.status == 401){
+                Alert.alert(
+                    "Dados inválidos",
+                    "Login ou senha inválidos.",
+                    [
+                        {
+                            text: "Ok",
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+
+            else{
+                Alert.alert(
+                    "Erro",
+                    result.data,
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+        }        
     }
 
     buttonBack = () => {
@@ -52,7 +108,12 @@ export default class LoginPasswordScreen extends Component{
                                 <TextInput style={styles.input} 
                                     placeholder="Senha..."
                                     secureTextEntry={this.state.showPassword}
-                                    onChangeText={text => this.setState({password: text})}
+                                    onChangeText={text => this.setState(prevState => ({
+                                        loginRequest: {
+                                            ...prevState.loginRequest,
+                                            password: text
+                                        }
+                                    }))}
                                 />
                                 <Icon name="remove-red-eye" color="#000" onPress={() => !this.toggleSwitch() } />
                             </View>

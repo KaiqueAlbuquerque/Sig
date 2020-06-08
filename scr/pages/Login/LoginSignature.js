@@ -5,8 +5,12 @@ import { StyleSheet,
         Image,
         TouchableOpacity,
         Text,
-        Picker
+        Picker,
+        ActivityIndicator,
+        Alert
     } from 'react-native';
+
+import CrudService from '../../services/Crud/CrudService.js';
 
 const width = Dimensions.get('screen').width;
 
@@ -17,64 +21,104 @@ export default class LoginSignatureScreen extends Component{
 
         this.state = {
             login: props.navigation.state.params.login, 
-            language: 'Default'
+            signature: "0",
+            listSignatures: [],
+            isLoading: true
         }
     }
 
     buttonNext = () => { 
-        this.props.navigation.navigate('LoginPassword');
+        this.props.navigation.navigate('LoginPassword', {login: this.state.login, signature: this.state.signature});
     }
 
     buttonBack = () => {
         this.props.navigation.navigate('LoginEmail');
     }
 
-    componentDidMount() {
-        console.log(this.state.login);
+    async componentDidMount() {
+        let crudService = new CrudService();
+        let result = await crudService.get(`auth/getSignatures?email=${this.state.login}`);
+        
+        if(result.status == 200)
+            this.setState({
+                listSignatures: [...result.data],
+                isLoading: false
+            })
+
+        else{
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
     }
 
     render() {
-        
+        let signatures = this.state.listSignatures.map((s, i) => {
+            return <Picker.Item key={i} value={s.signatureId} label={s.name} />
+        });
+
         return(
             <View style={styles.container}>
-                <View style={styles.top}>
-                    <Image style={styles.logo} 
-                        source={require('../../assets/img/logo.png')}/>
-                </View>
-                <View style={styles.bottom}>
-                    <Text style={styles.stage}>Etapa 2 de 3</Text>
-                    <View style={styles.form}>    
-                        <Text style={styles.labelForm}>Selecione a Assinatura</Text>
-                        <View style={styles.viewInput}>
-                            <Picker
-                                style={pickerStyle}
-                                selectedValue={this.state.language}
-                                onValueChange={(itemValue, itemIndex) =>
-                                    this.setState({language: itemValue})
-                                }>
-                                <Picker.Item label="LWM" value="toyota" />
-                                <Picker.Item label="Honda" value="honda" />
-                            </Picker>
+                {
+                    this.state.isLoading && (
+                        <View style={styles.containerLoader}>
+                            <ActivityIndicator size="large" color="#196280" />
                         </View>
-                    </View>
-                    
-                    <View style={styles.button}>
-                        <TouchableOpacity
-                            style={styles.nextButton}
-                            activeOpacity = { .5 }
-                            onPress={ this.buttonNext }
-                        >
-                            <Text style={styles.nextText}>Próximo</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.backButton}
-                            activeOpacity = { .5 }
-                            onPress={ this.buttonBack }
-                        >
-                            <Text style={styles.backText}>Voltar</Text>
-                        </TouchableOpacity>
-                    </View>                    
-                </View>
+                    )
+                }
+                {
+                    !this.state.isLoading && (
+                        <View style={styles.container}>
+                            <View style={styles.top}>
+                                <Image style={styles.logo} 
+                                    source={require('../../assets/img/logo.png')}/>
+                            </View>
+                            <View style={styles.bottom}>
+                                <Text style={styles.stage}>Etapa 2 de 3</Text>
+                                <View style={styles.form}>    
+                                    <Text style={styles.labelForm}>Selecione a Assinatura</Text>
+                                    <View style={styles.viewInput}>
+                                        <Picker
+                                            style={pickerStyle}
+                                            selectedValue={this.state.signature}
+                                            onValueChange={(itemValue, itemIndex) =>
+                                                this.setState({signature: itemValue})
+                                            }>
+                                            <Picker.Item key={0} value={0} label="SELECIONE A ASSINATURA" />
+                                            {signatures}
+                                        </Picker>
+                                    </View>
+                                </View>
+                                
+                                <View style={styles.button}>
+                                    <TouchableOpacity
+                                        style={styles.nextButton}
+                                        activeOpacity = { .5 }
+                                        onPress={ this.buttonNext }
+                                    >
+                                        <Text style={styles.nextText}>Próximo</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.backButton}
+                                        activeOpacity = { .5 }
+                                        onPress={ this.buttonBack }
+                                    >
+                                        <Text style={styles.backText}>Voltar</Text>
+                                    </TouchableOpacity>
+                                </View>                    
+                            </View>
+                        </View>
+                    )
+                }
             </View>
         );
     }
@@ -110,6 +154,10 @@ const pickerStyle = {
 };
 
 const styles = StyleSheet.create({
+    containerLoader: {
+        flex: 1,
+        justifyContent: "center"
+    },
     container: {
         flex: 1
     },

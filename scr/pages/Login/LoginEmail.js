@@ -6,15 +6,40 @@ import { StyleSheet,
         Image,
         TouchableOpacity, 
         StatusBar,
-        Text
+        Text,
+        Alert
     } from 'react-native';
 
 const width = Dimensions.get('screen').width;
 
 export default class LoginEmailScreen extends Component{
 
+    constructor(props){
+        super(props);
+
+        this.state = {
+            login: '',
+        }
+    }
+
     buttonNext = () => {
-        this.props.navigation.navigate('LoginSignature', {login: this.state.login});
+        let login = this.state.login;
+
+        if(login == ''){
+            Alert.alert(
+                "Dados inválidos",
+                "Informe o login.",
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else
+            this.props.navigation.navigate('LoginSignature', {login: this.state.login});
     }
 
     componentDidMount(){
