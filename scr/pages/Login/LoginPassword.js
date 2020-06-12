@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, 
         View, 
         TextInput,
@@ -10,32 +10,30 @@ import { StyleSheet,
     } from 'react-native';
 
 import { Icon } from 'react-native-elements';
+import { useDispatch } from 'react-redux';
+
 import CrudService from '../../services/Crud/CrudService.js';
 
 const width = Dimensions.get('screen').width;
 
-export default class LoginPasswordScreen extends Component{
+export default function LoginPasswordScreen(props){
 
-    constructor(props) {
-        super(props);
-
-        this.toggleSwitch = this.toggleSwitch.bind(this);
+    const dispatch = useDispatch();
+            
+    const [showPassword, setShowPassword] = useState(true);
+    const [loginRequest, setLoginRequest] = useState(
+                            {
+                                email: props.navigation.state.params.login, 
+                                signatureId: props.navigation.state.params.signature,
+                                password: ''
+                            });
         
-        this.state = {
-          showPassword: true,
-          loginRequest: {
-            email: props.navigation.state.params.login,
-            signatureId: props.navigation.state.params.signature
-          }
-        }
+    const toggleSwitch = () => {
+        setShowPassword(!showPassword);
     }
 
-    toggleSwitch() {
-        this.setState({ showPassword: !this.state.showPassword });
-    }
-
-    buttonNext = async () => { 
-        let password = this.state.loginRequest.password;
+    const buttonNext = async () => { 
+        let password = loginRequest.password;
         if(password == ''){
             Alert.alert(
                 "Dados inválidos",
@@ -51,10 +49,13 @@ export default class LoginPasswordScreen extends Component{
         }
         else{
             let crudService = new CrudService();
-            let result = await crudService.post(`auth/login`, this.state.loginRequest);
+            let result = await crudService.post(`auth/login`, loginRequest);
             
-            if(result.status == 200)
-                this.props.navigation.navigate('Home');
+            if(result.status == 200){
+                
+                dispatch({ type: 'ADD_DATA', data: result.data });
+                props.navigation.navigate('Home');
+            }
             
             else if(result.status == 401){
                 Alert.alert(
@@ -77,7 +78,7 @@ export default class LoginPasswordScreen extends Component{
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmail'),
+                            onPress: () => props.navigation.navigate('LoginEmail'),
                             style: "ok"
                         }
                     ],
@@ -87,58 +88,54 @@ export default class LoginPasswordScreen extends Component{
         }        
     }
 
-    buttonBack = () => {
-        this.props.navigation.navigate('LoginSignature');
+    const buttonBack = () => {
+        props.navigation.navigate('LoginSignature');
     }
-
-    render() {
         
-        return(
-            <View style={styles.container}>
-                <View style={styles.top}>
-                    <Image style={styles.logo} 
-                        source={require('../../assets/img/logo.png')}/>
-                </View>
-                <View style={styles.bottom}>
-                <Text style={styles.stage}>Etapa 3 de 3</Text>
-                    <View style={styles.form}>                    
-                        <Text style={styles.labelForm}>Senha</Text>    
-                        <View style={styles.viewInput}>
-                            <View style={styles.viewInputIcon}>
-                                <TextInput style={styles.input} 
-                                    placeholder="Senha..."
-                                    secureTextEntry={this.state.showPassword}
-                                    onChangeText={text => this.setState(prevState => ({
-                                        loginRequest: {
-                                            ...prevState.loginRequest,
-                                            password: text
-                                        }
-                                    }))}
-                                />
-                                <Icon name="remove-red-eye" color="#000" onPress={() => !this.toggleSwitch() } />
-                            </View>
+    return(
+        <View style={styles.container}>
+            <View style={styles.top}>
+                <Image style={styles.logo} 
+                    source={require('../../assets/img/logo.png')}/>
+            </View>
+            <View style={styles.bottom}>
+            <Text style={styles.stage}>Etapa 3 de 3</Text>
+                <View style={styles.form}>                    
+                    <Text style={styles.labelForm}>Senha</Text>    
+                    <View style={styles.viewInput}>
+                        <View style={styles.viewInputIcon}>
+                            <TextInput style={styles.input} 
+                                placeholder="Senha..."
+                                secureTextEntry={showPassword}
+                                onChangeText={text => {
+                                    setLoginRequest(prevState => {
+                                        return {...prevState, password: text}
+                                    });
+                                }}
+                            />
+                            <Icon name="remove-red-eye" color="#000" onPress={ toggleSwitch } />
                         </View>
                     </View>
-                    <View style={styles.button}>
-                        <TouchableOpacity
-                            style={styles.nextButton}
-                            activeOpacity = { .5 }
-                            onPress={ this.buttonNext }
-                        >
-                            <Text style={styles.nextText}>Próximo</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.backButton}
-                            activeOpacity = { .5 }
-                            onPress={ this.buttonBack }
-                        >
-                            <Text style={styles.backText}>Voltar</Text>
-                        </TouchableOpacity>
-                    </View>                    
                 </View>
+                <View style={styles.button}>
+                    <TouchableOpacity
+                        style={styles.nextButton}
+                        activeOpacity = { .5 }
+                        onPress={ buttonNext }
+                    >
+                        <Text style={styles.nextText}>Próximo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        activeOpacity = { .5 }
+                        onPress={ buttonBack }
+                    >
+                        <Text style={styles.backText}>Voltar</Text>
+                    </TouchableOpacity>
+                </View>                    
             </View>
-        );
-    }
+        </View>
+    );    
 }
 
 const styles = StyleSheet.create({

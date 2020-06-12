@@ -25,7 +25,7 @@ class NovoChamado extends Component{
                         leftComponent={<Icon
                                         name='keyboard-backspace'
                                         color='#fff'
-                                        onPress={() => this.props.navigation.navigate('Settings')} />}
+                                        onPress={() => this.props.navigation.navigate('DemandsList')} />}
                         centerComponent={<Text h4 style={{textAlign: 'center', color: '#fff'}}>Detalhes</Text>}
                         containerStyle={{
                             backgroundColor: '#196280',
@@ -234,7 +234,7 @@ class Interacao extends Component{
                         leftComponent={<Icon
                                         name='keyboard-backspace'
                                         color='#fff'
-                                        onPress={() => this.props.navigation.navigate('Settings')} />}
+                                        onPress={() => this.props.navigation.navigate('DemandsList')} />}
                         centerComponent={<Text h4 style={{textAlign: 'center', color: '#fff'}}>Interações</Text>}
                         containerStyle={{
                             backgroundColor: '#196280',
