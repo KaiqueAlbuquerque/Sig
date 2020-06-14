@@ -1,9 +1,11 @@
 import axios from 'axios';
 
 export default class CrudService {
-    async get(url) {
+    async get(url, token = "") {
         try{
-            let res = await axios.get(`http://sistemasig.duckdns.org:4999/sig/api/${url}`);
+            let res = await axios.get(`http://sistemasig.duckdns.org:4999/sig/api/${url}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             return res;
         }
         catch(error){
@@ -11,12 +13,13 @@ export default class CrudService {
         }
     }
 
-    async post(url, obj) {
+    async post(url, obj, token = "") {
         try{
             let res = await axios.post(`http://sistemasig.duckdns.org:4999/sig/api/${url}`, 
                                     JSON.stringify(obj), {
                                     headers: {
                                         'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${token}`
                                     }
                                 });
             return res;
