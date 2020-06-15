@@ -7,6 +7,8 @@ import { Card, Header, Text, Icon, Avatar } from 'react-native-elements';
 
 import {AutoGrowingTextInput} from 'react-native-autogrow-textinput';
 
+import COLORS from '../../styles/Colors.js';
+
 class NovoChamado extends Component{
 
     constructor(props){
@@ -28,7 +30,7 @@ class NovoChamado extends Component{
                                         onPress={() => this.props.navigation.navigate('DemandsList')} />}
                         centerComponent={<Text h4 style={{textAlign: 'center', color: '#fff'}}>Detalhes</Text>}
                         containerStyle={{
-                            backgroundColor: '#196280',
+                            backgroundColor: COLORS.default,
                             paddingTop: 0
                     }}
                     />
@@ -237,7 +239,7 @@ class Interacao extends Component{
                                         onPress={() => this.props.navigation.navigate('DemandsList')} />}
                         centerComponent={<Text h4 style={{textAlign: 'center', color: '#fff'}}>Interações</Text>}
                         containerStyle={{
-                            backgroundColor: '#196280',
+                            backgroundColor: COLORS.default,
                             paddingTop: 0
                     }}
                     />
@@ -321,7 +323,7 @@ export default createMaterialTopTabNavigator({
     tabBarPosition: 'bottom',
     tabBarOptions: {
         activeTintColor: 'orange',
-        style: { backgroundColor: '#196280' },
+        style: { backgroundColor: COLORS.default },
         indicatorStyle: {
             height: 0
         }

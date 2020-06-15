@@ -18,6 +18,8 @@ import MenuScreen from '../Menu/Menu.js';
 import DemandsListScreen from '../Demands/DemandsList.js';
 import OrderListScreen from '../Commercial/OrderList.js';
 
+import COLORS from '../../styles/Colors.js';
+
 function HomeScreen(props) {
 
 	return (
@@ -44,7 +46,7 @@ function HomeScreen(props) {
 				yAxisLabel={"$"}
 				chartConfig={{
 					backgroundColor: "#e26a00",
-					backgroundGradientFrom: "#196280",
+					backgroundGradientFrom: COLORS.default,
 					backgroundGradientTo: "#ffa726",
 					decimalPlaces: 2, 
 					color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -81,7 +83,7 @@ function HomeScreen(props) {
 				yAxisLabel={"$"}
 				chartConfig={{
 					backgroundColor: "#e26a00",
-					backgroundGradientFrom: "#196280",
+					backgroundGradientFrom: COLORS.default,
 					backgroundGradientTo: "#ffa726",
 					decimalPlaces: 2, 
 					color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -139,7 +141,7 @@ function HomeScreen(props) {
 				height={220}
 				chartConfig={{
 					backgroundColor: "#e26a00",
-					backgroundGradientFrom: "#196280",
+					backgroundGradientFrom: COLORS.default,
 					backgroundGradientTo: "#ffa726",
 					decimalPlaces: 2, 
 					color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -163,7 +165,7 @@ function HomeScreen(props) {
 				height={220}
 				chartConfig={{
 					backgroundColor: "#e26a00",
-					backgroundGradientFrom: "#196280",
+					backgroundGradientFrom: COLORS.default,
 					backgroundGradientTo: "#ffa726",
 					decimalPlaces: 2, 
 					color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
@@ -219,7 +221,7 @@ export default createMaterialBottomTabNavigator(
 	},
 	{
 		initialRouteName: "Home",
-		barStyle: { backgroundColor: "#196280" },
+		barStyle: { backgroundColor: COLORS.default },
 		shifting: true,
 	}
 );

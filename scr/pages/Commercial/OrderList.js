@@ -8,6 +8,8 @@ import { Card, Header, Text } from "react-native-elements";
 
 import { useSelector } from 'react-redux';
 
+import COLORS from '../../styles/Colors.js';
+
 export default function OrderListScreen(props){
     
     let havePermission = false;
@@ -42,7 +44,7 @@ export default function OrderListScreen(props){
                         }
                         rightComponent={{ icon: "filter-list", color: "#fff" }}
                         containerStyle={{
-                            backgroundColor: "#196280",
+                            backgroundColor: COLORS.default,
                             paddingTop: 0,
                         }}
                     />

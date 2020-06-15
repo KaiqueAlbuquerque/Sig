@@ -14,6 +14,8 @@ import { useDispatch } from 'react-redux';
 
 import CrudService from '../../services/Crud/CrudService.js';
 
+import COLORS from '../../styles/Colors.js';
+
 const width = Dimensions.get('screen').width;
 
 export default function LoginPasswordScreen(props){
@@ -194,7 +196,7 @@ const styles = StyleSheet.create({
         paddingBottom:15,
         marginLeft:30,
         marginRight:30,
-        backgroundColor:'#196280',
+        backgroundColor:COLORS.default,
         borderRadius:30,
         borderWidth: 1,
         borderColor: '#fff'

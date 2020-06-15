@@ -10,6 +10,8 @@ import { useSelector } from 'react-redux';
 
 import CrudService from '../../services/Crud/CrudService.js';
 
+import COLORS from '../../styles/Colors.js';
+
 class MyListItem extends PureComponent {
 	render() {
 		return (
@@ -122,7 +124,7 @@ export default function DemandsListScreen(props){
 						}
 						rightComponent={{ icon: "filter-list", color: "#fff" }}
 						containerStyle={{
-							backgroundColor: "#196280",
+							backgroundColor: COLORS.default,
 							paddingTop: 0,
 						}}
 					/>

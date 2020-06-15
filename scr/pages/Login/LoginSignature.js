@@ -12,6 +12,8 @@ import { StyleSheet,
 
 import CrudService from '../../services/Crud/CrudService.js';
 
+import COLORS from '../../styles/Colors.js';
+
 const width = Dimensions.get('screen').width;
 
 export default class LoginSignatureScreen extends Component{
@@ -71,7 +73,7 @@ export default class LoginSignatureScreen extends Component{
                 {
                     this.state.isLoading && (
                         <View style={styles.containerLoader}>
-                            <ActivityIndicator size="large" color="#196280" />
+                            <ActivityIndicator size="large" color={COLORS.default} />
                         </View>
                     )
                 }
@@ -205,7 +207,7 @@ const styles = StyleSheet.create({
         paddingBottom:15,
         marginLeft:30,
         marginRight:30,
-        backgroundColor:'#196280',
+        backgroundColor:COLORS.default,
         borderRadius:30,
         borderWidth: 1,
         borderColor: '#fff'

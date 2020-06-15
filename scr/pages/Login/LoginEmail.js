@@ -10,6 +10,8 @@ import { StyleSheet,
         Alert
     } from 'react-native';
 
+import COLORS from '../../styles/Colors.js';
+
 const width = Dimensions.get('screen').width;
 
 export default class LoginEmailScreen extends Component{
@@ -44,7 +46,7 @@ export default class LoginEmailScreen extends Component{
 
     componentDidMount(){
         StatusBar.setBarStyle('light-content',true);
-        StatusBar.setBackgroundColor("#196280");
+        StatusBar.setBackgroundColor(COLORS.default);
     };      
 
     render() {
@@ -129,7 +131,7 @@ const styles = StyleSheet.create({
         paddingBottom:15,
         marginLeft:30,
         marginRight:30,
-        backgroundColor:'#196280',
+        backgroundColor:COLORS.default,
         borderRadius:30,
         borderWidth: 1,
         borderColor: '#fff'
