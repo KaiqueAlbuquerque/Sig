@@ -1,8 +1,8 @@
 import React, { useState, useEffect, PureComponent } from "react";
 
-import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from "react-native";
+import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Linking } from "react-native";
 import ActionButton from "react-native-action-button";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 import { Card, Header, Text } from "react-native-elements";
 
@@ -107,6 +107,20 @@ export default function DemandsListScreen(props){
     	/>
 	);
 
+	const openWhatsapp = () => {
+		Linking.canOpenURL("whatsapp://send?text=teste").then(supported => {
+			if (supported) {
+				return Linking.openURL(
+					"whatsapp://send?phone=5511976546401&text=teste"
+				);
+			} else {
+				return Linking.openURL(
+					"https://api.whatsapp.com/send?phone=5511976546401&text=teste"
+				);
+			}
+		});
+	}
+
 	data.permissionAndMenu.forEach((menu, index) => {
         if(menu.menuId == 24){
 			havePermission = true;
@@ -143,18 +157,25 @@ export default function DemandsListScreen(props){
 					/>
 					<ActionButton buttonColor="rgba(231,76,60,1)" style={styles.actionButton}>
 						<ActionButton.Item
+							buttonColor="#34af23"
+							title="Whatsapp"
+							onPress={ openWhatsapp }
+						>
+							<Icon name='whatsapp' style={styles.actionButtonIcon} />
+						</ActionButton.Item>
+						<ActionButton.Item
 							buttonColor="#fb8c00"
 							title="QrCode"
 							onPress={() => props.navigation.navigate("QrCode")}
 						>
-							<Icon name="add" style={styles.actionButtonIcon} />
+							<Icon name='qrcode' style={styles.actionButtonIcon} />
 						</ActionButton.Item>
 						<ActionButton.Item
 							buttonColor="#9b59b6"
 							title="Novo Chamado"
 							onPress={() => props.navigation.navigate("NovoChamado")}
 						>
-							<Icon name="add" style={styles.actionButtonIcon} />
+							<Icon name='plus' style={styles.actionButtonIcon} />
 						</ActionButton.Item>
 					</ActionButton>
 				 </>
