@@ -15,7 +15,7 @@ import COLORS from '../../styles/Colors.js';
 class MyListItem extends PureComponent {
 	render() {
 		return (
-			<TouchableOpacity onPress={() => this.props.navigation.navigate("NovoChamado")}>
+			<TouchableOpacity onPress={() => this.props.navigation.navigate("DemandsDetail")}>
 				<Card containerStyle={{ borderRadius: 15 }}>
 					<Text style={styles.textDemands}>Chamado {this.props.item.ticketId}</Text>
 					<Text>
@@ -173,7 +173,7 @@ export default function DemandsListScreen(props){
 						<ActionButton.Item
 							buttonColor="#9b59b6"
 							title="Novo Chamado"
-							onPress={() => props.navigation.navigate("NovoChamado")}
+							onPress={() => props.navigation.navigate("DemandsDetail")}
 						>
 							<Icon name='plus' style={styles.actionButtonIcon} />
 						</ActionButton.Item>

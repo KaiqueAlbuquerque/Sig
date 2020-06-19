@@ -3,7 +3,7 @@ import { Text, View, Dimensions, StyleSheet } from 'react-native';
 
 import QRCodeScanner from "react-native-qrcode-scanner";
 
-export default class QrCode extends Component {
+export default class QrCodeScreen extends Component {
     state = {
       url: '',
     };
@@ -15,7 +15,7 @@ export default class QrCode extends Component {
     onSuccess = async (e) => {
       await this.setState({ url: e.data });
       this.handleButton();
-      this.props.navigation.navigate('NovoChamado', {idProduto: this.state.url});
+      this.props.navigation.navigate('DemandsDetail', {idProduto: this.state.url});
     };
     
     render(){

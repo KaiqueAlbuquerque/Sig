@@ -14,9 +14,9 @@ import {
 
 import { LabelDemands, LabelCommercial } from '../components/LabelMenu.js';
 
-import MenuScreen from '../Menu/Menu.js';
-import DemandsListScreen from '../Demands/DemandsList.js';
-import OrderListScreen from '../Commercial/OrderList.js';
+import MenuScreen from '../Menu/MenuScreen.js';
+import DemandsListScreen from '../Demands/DemandsListScreen.js';
+import OrderListScreen from '../Commercial/OrderListScreen.js';
 
 import COLORS from '../../styles/Colors.js';
 
