@@ -15,9 +15,9 @@ import COLORS from '../../styles/Colors.js';
 class MyListItem extends PureComponent {
 	render() {
 		return (
-			<TouchableOpacity onPress={() => this.props.navigation.navigate("DemandsDetail")}>
+			<TouchableOpacity onPress={() => this.props.navigation.navigate('DemandsDetail', {userData: this.props.data, demandsId: this.props.item.ticketId})}>
 				<Card containerStyle={{ borderRadius: 15 }}>
-					<Text style={styles.textDemands}>Chamado {this.props.item.ticketId}</Text>
+					<Text style={styles.textDemands}>Chamado {this.props.item.code}</Text>
 					<Text>
 						<Text style={styles.textBold}>Cliente:</Text> {this.props.item.client}
 					</Text>
@@ -104,6 +104,7 @@ export default function DemandsListScreen(props){
 		<MyListItem
 			item={item}
 			navigation={props.navigation}
+			data={data}
     	/>
 	);
 
@@ -111,11 +112,11 @@ export default function DemandsListScreen(props){
 		Linking.canOpenURL("whatsapp://send?text=teste").then(supported => {
 			if (supported) {
 				return Linking.openURL(
-					"whatsapp://send?phone=5511976546401&text=teste"
+					"whatsapp://send?phone=5511987511520&text=teste"
 				);
 			} else {
 				return Linking.openURL(
-					"https://api.whatsapp.com/send?phone=5511976546401&text=teste"
+					"https://api.whatsapp.com/send?phone=5511987511520&text=teste"
 				);
 			}
 		});
@@ -173,7 +174,7 @@ export default function DemandsListScreen(props){
 						<ActionButton.Item
 							buttonColor="#9b59b6"
 							title="Novo Chamado"
-							onPress={() => props.navigation.navigate("DemandsDetail")}
+							onPress={() => props.navigation.navigate("DemandsDetail", {userData: data})}
 						>
 							<Icon name='plus' style={styles.actionButtonIcon} />
 						</ActionButton.Item>
