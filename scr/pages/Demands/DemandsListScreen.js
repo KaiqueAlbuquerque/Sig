@@ -1,6 +1,6 @@
 import React, { useState, useEffect, PureComponent } from "react";
 
-import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Linking } from "react-native";
+import { View, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, Linking, Alert } from "react-native";
 import ActionButton from "react-native-action-button";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -71,11 +71,41 @@ export default function DemandsListScreen(props){
 			
 			let result = await crudService.get(`demands?SignatureId=${data.userData.signatureId}&PersonId=${data.userData.personId}&Page=${listDemands.page}`, data.token);
 			
-			setListDemands({
-				data: [...listDemands.data, ...result.data],
-				page: listDemands.page + 25,
-				loading: false,
-			})
+			if(result.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('LoginEmailScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(result.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultContacts.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('DemandsListScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+				setListDemands({
+					data: [...listDemands.data, ...result.data],
+					page: listDemands.page + 25,
+					loading: false,
+				})	
+			}
 
 			setOnEndReachedCalledDuringMomentum(true);
 		}

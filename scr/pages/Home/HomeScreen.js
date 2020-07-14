@@ -12,7 +12,7 @@ import {
   ProgressChart,
 } from "react-native-chart-kit";
 
-import { LabelDemands, LabelCommercial } from '../components/LabelMenu.js';
+import { LabelDemands, LabelCommercial } from '../Components/LabelMenu';
 
 import MenuScreen from '../Menu/MenuScreen.js';
 import DemandsListScreen from '../Demands/DemandsListScreen.js';

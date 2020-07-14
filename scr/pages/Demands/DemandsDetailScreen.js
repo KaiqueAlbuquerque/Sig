@@ -14,13 +14,14 @@ import { View,
          TouchableOpacity,
          FlatList,
          ActivityIndicator,
-         Switch } from 'react-native';
+         Switch,
+         Alert } from 'react-native';
 import { Card, Header, Text, Icon, Avatar } from 'react-native-elements';
 
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
 import COLORS from '../../styles/Colors.js';
-import CardFiles from '../components/CardFiles.js';
+import CardFiles from '../Components/CardFiles.js';
 
 import CrudService from '../../services/Crud/CrudService.js';
 
@@ -309,31 +310,124 @@ export class DemandsDetailScreen extends Component{
             })
     
             let resultContacts = await crudService.get(`comboDemands/getComboContact/${clientInList.clientHelpDeskId}`, this.state.data.userData.token);
-            this.setState({
-                contact: {
-                    array: [...resultContacts.data],
-                    selected: this.state.contact.selected,
-                    enabled: this.state.contact.enabled
-                }
-            }, this.populateContact);
-    
+            
+            if(resultContacts.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(resultContacts.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultContacts.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                this.setState({
+                    contact: {
+                        array: [...resultContacts.data],
+                        selected: this.state.contact.selected,
+                        enabled: this.state.contact.enabled
+                    }
+                }, this.populateContact);
+            }
+
             let resultAreas = await crudService.get(`comboDemands/getComboArea?clientHelpDeskId=${clientInList.clientHelpDeskId}&PersonId=${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
-            this.setState({
-                area:{
-                    array: [...resultAreas.data],
-                    selected: this.state.area.selected,
-                    enabled: this.state.area.enabled
-                }
-            }, this.populateArea);
+                
+            if(resultAreas.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(resultAreas.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultContacts.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                this.setState({
+                    area:{
+                        array: [...resultAreas.data],
+                        selected: this.state.area.selected,
+                        enabled: this.state.area.enabled
+                    }
+                }, this.populateArea);
+            }
 
             let resultProducts = await crudService.get(`comboDemands/getComboProduct/${itemValue}`, this.state.data.userData.token);
-            this.setState({
-                products: {
-                    listProducts: resultProducts.data,
-                    selectOrChange: this.state.products.selectOrChange,
-                    selected: this.state.products.selected
-                }
-            })
+                
+            if(resultProducts.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(resultProducts.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultContacts.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                this.setState({
+                    products: {
+                        listProducts: resultProducts.data,
+                        selectOrChange: this.state.products.selectOrChange,
+                        selected: this.state.products.selected
+                    }
+                })
+            }
         }
         else{
             this.setState({
@@ -451,13 +545,44 @@ export class DemandsDetailScreen extends Component{
             let crudService = new CrudService();
 
             let resultCategory = await crudService.get(`comboDemands/getComboCategory/${itemValue}`, this.state.data.userData.token);
-            this.setState({
-                category: {
-                    array: [...resultCategory.data],
-                    enabled: this.state.category.enabled,
-                    selected: 0
-                }
-            }, this.populateCategory);
+            
+            if(resultCategory.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(resultCategory.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultContacts.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                this.setState({
+                    category: {
+                        array: [...resultCategory.data],
+                        enabled: this.state.category.enabled,
+                        selected: 0
+                    }
+                }, this.populateCategory);
+            }
         }
         else{
             this.setState({
@@ -524,13 +649,44 @@ export class DemandsDetailScreen extends Component{
             let crudService = new CrudService();
 
             let resultSubject = await crudService.get(`comboDemands/getComboSubject/${itemValue}`, this.state.data.userData.token);
-            this.setState({
-                subject: {
-                    array: [...resultSubject.data],
-                    enabled: this.state.subject.enabled,
-                    selected: 0
-                }
-            }, this.populateSubject);
+            
+            if(resultSubject.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(resultSubject.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultContacts.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                this.setState({
+                    subject: {
+                        array: [...resultSubject.data],
+                        enabled: this.state.subject.enabled,
+                        selected: 0
+                    }
+                }, this.populateSubject);
+            }
         }
         else{
             this.setState({
@@ -1103,82 +1259,174 @@ export class DemandsDetailScreen extends Component{
         let crudService = new CrudService();
         
         let resultClients = await crudService.get(`comboDemands/getComboClients/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
-        this.setState({
-            client: {
-                array: [...resultClients.data],
-                selected: this.state.client.selected,
-                enabled: true,
-                arrayCombo: this.state.client.arrayCombo
-            }
-        }, this.populateClient);
+        
+        if(resultClients.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(resultClients.status == 400){
+            Alert.alert(
+                "Erro",
+                resultContacts.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            this.setState({
+                client: {
+                    array: [...resultClients.data],
+                    selected: this.state.client.selected,
+                    enabled: true,
+                    arrayCombo: this.state.client.arrayCombo
+                }
+            }, this.populateClient);
+        }
 
         let resultPriority = await crudService.get(`comboDemands/getComboPriority/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
-        this.setState({
-            priority: {
-                array: [...resultPriority.data],
-                selected: this.state.priority.selected,
-                enabled: true,
-                arrayCombo: this.state.priority.arrayCombo
-            }
-        }, this.populatePriority);
         
+        if(resultPriority.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(resultPriority.status == 400){
+            Alert.alert(
+                "Erro",
+                resultContacts.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            this.setState({
+                priority: {
+                    array: [...resultPriority.data],
+                    selected: this.state.priority.selected,
+                    enabled: true,
+                    arrayCombo: this.state.priority.arrayCombo
+                }
+            }, this.populatePriority);
+        }
+
         if(this.state.data.demandsId != undefined){
             let getDemands = await crudService.get(`demands/${this.state.data.demandsId}`, this.state.data.userData.token);
             
-            this.changeClient(getDemands.data.clientId);
-            this.changeArea(getDemands.data.areaId);
-
-            let labelEquipment = "Nenhum Equipamento!";
-            if(getDemands.data.internalCodeEquipment != null && getDemands.data.internalCodeEquipment != "" && getDemands.data.equipment != null && getDemands.data.equipment != ""){
-                labelEquipment = `${getDemands.data.internalCodeEquipment} - ${getDemands.data.equipment}`;
+            if(getDemands.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
             }
-            else if((getDemands.data.internalCodeEquipment == null || getDemands.data.internalCodeEquipment == "") && (getDemands.data.equipment != null && getDemands.data.equipment != "")){
-                labelEquipment = `${getDemands.data.equipment}`;
+            else if(getDemands.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultContacts.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
             }
-            else if((getDemands.data.internalCodeEquipment != null && getDemands.data.internalCodeEquipment != "") && (getDemands.data.equipment == null || getDemands.data.equipment == "")){
-                labelEquipment = `${getDemands.data.internalCodeEquipment}`;
-            }
-            
-            this.setState({
-                dataDemands: getDemands.data,
-                client: {
-                    array: [...this.state.client.array],
-                    selected: getDemands.data.clientId,
-                    enabled: this.state.client.enabled,
-                    arrayCombo: [...this.state.client.arrayCombo]
-                },
-                priority: {
-                    array: [...this.state.priority.array],
-                    selected: getDemands.data.priorityId,
-                    enabled: this.state.priority.enabled,
-                    arrayCombo: [...this.state.priority.arrayCombo]
-                },
-                contact: {
-                    array: [...this.state.contact.array],
-                    selected: getDemands.data.contactId,
-                    enabled: this.state.contact.enabled,
-                    arrayCombo: [...this.state.contact.arrayCombo]
-                },
-                area: {
-                    array: [...this.state.area.array],
-                    selected: getDemands.data.areaId,
-                    enabled: this.state.area.enabled,
-                    arrayCombo: [...this.state.area.arrayCombo]
-                },
-                status: {
-                    statusId: getDemands.data.statusId,
-                    enabled: false
-                },
-                level: {
-                    levelId: getDemands.data.supportLevelId,
-                    enabled: false
-                },
-                products: {
-                    listProducts: this.state.products.listProducts,
-                    selectOrChange: "Trocar",
-                    selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
+            else{
+                this.changeClient(getDemands.data.clientId);
+                this.changeArea(getDemands.data.areaId);
+    
+                let labelEquipment = "Nenhum Equipamento!";
+                if(getDemands.data.internalCodeEquipment != null && getDemands.data.internalCodeEquipment != "" && getDemands.data.equipment != null && getDemands.data.equipment != ""){
+                    labelEquipment = `${getDemands.data.internalCodeEquipment} - ${getDemands.data.equipment}`;
                 }
-            }, this.afterDidMount);
+                else if((getDemands.data.internalCodeEquipment == null || getDemands.data.internalCodeEquipment == "") && (getDemands.data.equipment != null && getDemands.data.equipment != "")){
+                    labelEquipment = `${getDemands.data.equipment}`;
+                }
+                else if((getDemands.data.internalCodeEquipment != null && getDemands.data.internalCodeEquipment != "") && (getDemands.data.equipment == null || getDemands.data.equipment == "")){
+                    labelEquipment = `${getDemands.data.internalCodeEquipment}`;
+                }
+                
+                this.setState({
+                    dataDemands: getDemands.data,
+                    client: {
+                        array: [...this.state.client.array],
+                        selected: getDemands.data.clientId,
+                        enabled: this.state.client.enabled,
+                        arrayCombo: [...this.state.client.arrayCombo]
+                    },
+                    priority: {
+                        array: [...this.state.priority.array],
+                        selected: getDemands.data.priorityId,
+                        enabled: this.state.priority.enabled,
+                        arrayCombo: [...this.state.priority.arrayCombo]
+                    },
+                    contact: {
+                        array: [...this.state.contact.array],
+                        selected: getDemands.data.contactId,
+                        enabled: this.state.contact.enabled,
+                        arrayCombo: [...this.state.contact.arrayCombo]
+                    },
+                    area: {
+                        array: [...this.state.area.array],
+                        selected: getDemands.data.areaId,
+                        enabled: this.state.area.enabled,
+                        arrayCombo: [...this.state.area.arrayCombo]
+                    },
+                    status: {
+                        statusId: getDemands.data.statusId,
+                        enabled: false
+                    },
+                    level: {
+                        levelId: getDemands.data.supportLevelId,
+                        enabled: false
+                    },
+                    products: {
+                        listProducts: this.state.products.listProducts,
+                        selectOrChange: "Trocar",
+                        selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
+                    }
+                }, this.afterDidMount);
+            }
         }
         else{
             this.setState({
