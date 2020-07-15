@@ -22,6 +22,7 @@ import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
 import COLORS from '../../styles/Colors.js';
 import CardFiles from '../Components/CardFiles.js';
+import ListInteractionsScreen from '../Interactions/ListInteractionsScreen.js';
 
 import CrudService from '../../services/Crud/CrudService.js';
 
@@ -1436,121 +1437,6 @@ export class DemandsDetailScreen extends Component{
     }
 }
 
-function UselessTextInput(props) {
-    return ( 
-      <TextInput style={styles.textArea}
-        placeholder="Digite a interação..."
-        placeholderTextColor="grey"
-        {...props} 
-        editable
-      />
-    );
-  }
-  
-function UselessTextInputMultiline() {
-    const [value, onChangeText] = React.useState('');
-    return(
-        <View style={styles.textAreaContainer}>
-            <UselessTextInput
-                multiline
-                numberOfLines={4}
-                onChangeText={text => onChangeText(text)}
-                value={value}
-            />
-        </View>
-    );
-}
-
-class Interacao extends Component{
-    render(){
-        var lista = [];
-        for(var i = 0; i < 10; i++){
-            if (i % 2 == 0) {
-                lista.push(
-                    <View>
-                        <View style={{flexDirection: 'row', marginLeft:15, marginTop:15}}>
-                            <View style={{flex:1}}>
-                                <Avatar size="medium" rounded title="KA" />                        
-                            </View>
-                            <View style={{flex:5, justifyContent:'center'}}>
-                                <Text style={{fontSize:15, fontWeight: 'bold'}}>Kaique Albuquerque</Text>
-                                <Text style={{fontSize:10, fontWeight: 'bold'}}>kaiquealbuqueque@hotmail.com</Text>
-                            </View>
-                        </View>
-                        <Card containerStyle={{borderRadius:30}}>
-                            <Text style={{fontSize:15}}>Lorem {'\n'}Ipsum é simplesmente uma simulação de texto da indústria tipográfica e de 
-                                impressos, e vem sendo utilizado desde o século XVI, quando um impressor desconhecido 
-                                pegou uma bandeja de tipos e os embaralhou para fazer um livro de modelos de tipos. 
-                                Lorem Ipsum sobreviveu não só a cinco séculos, como também ao salto para a editoração 
-                                eletrônica, permanecendo essencialmente inalterado. Se popularizou na década de 60, 
-                                quando a Letraset lançou decalques contendo passagens de Lorem Ipsum, e mais recentemente 
-                                quando passou a ser integrado a softwares de editoração eletrônica como Aldus PageMaker. {i}
-                            </Text>
-                        </Card>
-                    </View>  
-                )      
-            }
-            else{
-                lista.push(
-                    <View>
-                        <View style={{flexDirection: 'row-reverse', marginRight:20, marginTop:15}}>
-                            <View style={{flex:1}}>
-                                <Avatar size="medium" rounded title="KA" />                        
-                            </View>
-                            <View style={{flex:5, justifyContent:'center', alignItems:'flex-end', marginRight:15}}>
-                                <Text style={{fontSize:15, fontWeight: 'bold'}}>Kaique Albuquerque</Text>
-                                <Text style={{fontSize:10, fontWeight: 'bold'}}>kaiquealbuqueque@hotmail.com</Text>
-                            </View>
-                        </View>
-                        <Card containerStyle={{borderRadius:30}}>
-                            <Text style={{fontSize:15}}>Lorem Ipsum é simplesmente uma simulação de texto da indústria tipográfica e de 
-                                impressos, e vem sendo utilizado desde o século XVI, quando um impressor desconhecido 
-                                pegou uma bandeja de tipos e os embaralhou para fazer um livro de modelos de tipos. 
-                                Lorem Ipsum sobreviveu não só a cinco séculos, como também ao salto para a editoração 
-                                eletrônica, permanecendo essencialmente inalterado. Se popularizou na década de 60, 
-                                quando a Letraset lançou decalques contendo passagens de Lorem Ipsum, e mais recentemente 
-                                quando passou a ser integrado a softwares de editoração eletrônica como Aldus PageMaker. {i}
-                            </Text>
-                        </Card>
-                    </View> 
-                )
-            }
-            
-        }
-        return(
-            <View style={{flex:1}}>
-                <View style={{flex:7}}>
-                    <Header
-                        leftComponent={<Icon
-                                        name='keyboard-backspace'
-                                        color='#fff'
-                                        onPress={() => this.props.navigation.navigate('DemandsList')} />}
-                        centerComponent={<Text h4 style={{textAlign: 'center', color: '#fff'}}>Interações</Text>}
-                        containerStyle={{
-                            backgroundColor: COLORS.default,
-                            paddingTop: 0
-                    }}
-                    />
-                    <ScrollView>
-                        {lista}
-                    </ScrollView>
-                </View>
-                <View style={{flex:1, flexDirection: 'row', marginTop:20, marginBottom:5, backgroundColor: "#efefef", borderRadius:40}}>
-                    <View style={{flex:10, paddingLeft:10, justifyContent: 'center'}}>
-                        <AutoGrowingTextInput placeholder={'Digite sua Interação'} />                
-                    </View>
-                    <View style={{flex:2, justifyContent: 'center', alignItems: 'center'}}>
-                        <Icon
-                            name='send'
-                            color='#000'
-                            onPress={() => console.log("aqui")} />
-                    </View>
-                </View>
-            </View> 
-        );
-    }
-}
-
 const pickerStyle = {
 	inputIOS: {
 		color: 'white',
@@ -1585,15 +1471,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center"
     },
-    textAreaContainer: {
-      borderColor: '#bdc3c7',
-      borderWidth: 1,
-      padding: 5
-    },
-    textArea: {
-      height: 150,
-      justifyContent: "flex-start"
-    },
     textBold: { 
 		fontWeight: "bold" 
 	},
@@ -1613,8 +1490,8 @@ export default createMaterialTopTabNavigator({
           tabBarLabel:'Detalhes'
         }   
     },
-    Interacao: { 
-        screen: Interacao,
+    Interaction: { 
+        screen: ListInteractionsScreen,
         navigationOptions:{
           tabBarLabel:'Interações'
         }
