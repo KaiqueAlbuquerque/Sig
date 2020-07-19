@@ -9,7 +9,8 @@ import { StyleSheet,
         Alert
     } from 'react-native';
 
-import { Icon } from 'react-native-elements';
+import Icon from 'react-native-vector-icons/FontAwesome';
+
 import { useDispatch } from 'react-redux';
 
 import CrudService from '../../services/Crud/CrudService.js';
@@ -21,7 +22,8 @@ const width = Dimensions.get('screen').width;
 export default function LoginPasswordScreen(props){
 
     const dispatch = useDispatch();
-            
+    
+    const [changeIcon, setChangeIcon] = useState("eye");
     const [showPassword, setShowPassword] = useState(true);
     const [loginRequest, setLoginRequest] = useState(
                             {
@@ -32,6 +34,13 @@ export default function LoginPasswordScreen(props){
         
     const toggleSwitch = () => {
         setShowPassword(!showPassword);
+
+        if(changeIcon == "eye"){
+            setChangeIcon("eye-slash");
+        }
+        else{
+            setChangeIcon("eye");
+        }
     }
 
     const buttonNext = async () => { 
@@ -58,7 +67,6 @@ export default function LoginPasswordScreen(props){
                 dispatch({ type: 'ADD_DATA', data: result.data });
                 props.navigation.navigate('Home');
             }
-            
             else if(result.status == 401){
                 Alert.alert(
                     "Dados inválidos",
@@ -72,7 +80,6 @@ export default function LoginPasswordScreen(props){
                     { cancelable: false }
                 );
             }
-
             else{
                 Alert.alert(
                     "Erro",
@@ -115,7 +122,7 @@ export default function LoginPasswordScreen(props){
                                     });
                                 }}
                             />
-                            <Icon name="remove-red-eye" color="#000" onPress={ toggleSwitch } />
+                            <Icon size={20} name={changeIcon} color="#000" onPress={ toggleSwitch } />
                         </View>
                     </View>
                 </View>

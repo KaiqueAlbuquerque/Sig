@@ -71,7 +71,14 @@ export default function DemandsListScreen(props){
 			
 			let result = await crudService.get(`demands?SignatureId=${data.userData.signatureId}&PersonId=${data.userData.personId}&Page=${listDemands.page}`, data.token);
 			
-			if(result.status == 401){
+			if(result.status == 200){
+				setListDemands({
+					data: [...listDemands.data, ...result.data],
+					page: listDemands.page + 25,
+					loading: false,
+				})	
+			}
+			else if(result.status == 401){
                 Alert.alert(
                     "Sessão Expirada",
                     "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -88,11 +95,11 @@ export default function DemandsListScreen(props){
             else if(result.status == 400){
                 Alert.alert(
                     "Erro",
-                    resultContacts.data[0],
+                    result.data[0],
                     [
                         {
                             text: "Ok",
-                            onPress: () => props.navigation.navigate('DemandsListScreen'),
+                            onPress: () => props.navigation.navigate('Home'),
                             style: "ok"
                         }
                     ],
@@ -100,12 +107,19 @@ export default function DemandsListScreen(props){
                 );
             }
             else{
-				setListDemands({
-					data: [...listDemands.data, ...result.data],
-					page: listDemands.page + 25,
-					loading: false,
-				})	
-			}
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('Home'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
 
 			setOnEndReachedCalledDuringMomentum(true);
 		}
@@ -167,7 +181,9 @@ export default function DemandsListScreen(props){
 								Lista de Chamados
 							</Text>
 						}
-						rightComponent={{ icon: "filter-list", color: "#fff" }}
+						rightComponent={
+							<Icon size={25} name='filter' style={{color: "white", marginRight: 10}}/>	
+						}
 						containerStyle={{
 							backgroundColor: COLORS.default,
 							paddingTop: 0,

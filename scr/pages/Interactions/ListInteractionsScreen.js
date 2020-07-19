@@ -105,46 +105,68 @@ export default function ListInteractionsScreen(props){
 				loading: refreshing == true ? false : true,
             })
             
-            let result = await crudService.get(`interactions?DemandsId=${props.navigation.state.params.demandsId}&page=${listInteractions.page}`, props.navigation.state.params.userData.token);
+            if(props.navigation.state.params.demandsId != undefined){
+                let result = await crudService.get(`interactions?DemandsId=${props.navigation.state.params.demandsId}&page=${listInteractions.page}`, props.navigation.state.params.userData.token);
             
-            if(result.status == 401){
-                Alert.alert(
-                    "Sessão Expirada",
-                    "Sua sessão expirou. Por favor, realize o login novamente.",
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => props.navigation.navigate('LoginEmailScreen'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
-            }
-            else if(result.status == 400){
-                Alert.alert(
-                    "Erro",
-                    resultContacts.data[0],
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => props.navigation.navigate('DemandsListScreen'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
+                if(result.status == 200){
+                    setListInteractions(result.data);
+
+                    setListInteractions({
+                        data: [...listInteractions.data, ...result.data],
+                        page: listInteractions.page + 25,
+                        loading: false,
+                    })	
+                }
+                else if(result.status == 401){
+                    Alert.alert(
+                        "Sessão Expirada",
+                        "Sua sessão expirou. Por favor, realize o login novamente.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => props.navigation.navigate('LoginEmailScreen'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else if(result.status == 400){
+                    Alert.alert(
+                        "Erro",
+                        result.data[0],
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => props.navigation.navigate('DemandsList'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else{
+                    Alert.alert(
+                        "Erro",
+                        "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('DemandsList'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
             }
             else{
-                setListInteractions(result.data);
-
                 setListInteractions({
-					data: [...listInteractions.data, ...result.data],
-					page: listInteractions.page + 25,
-					loading: false,
-				})	
+                    data: [...listInteractions.data],
+                    page: listInteractions.page,
+                    loading: false,
+                })
             }
-
             setOnEndReachedCalledDuringMomentum(true);
         }
     }

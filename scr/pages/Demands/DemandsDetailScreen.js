@@ -16,9 +16,7 @@ import { View,
          ActivityIndicator,
          Switch,
          Alert } from 'react-native';
-import { Card, Header, Text, Icon, Avatar } from 'react-native-elements';
-
-import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
+import { Card, Header, Text, Icon } from 'react-native-elements';
 
 import COLORS from '../../styles/Colors.js';
 import CardFiles from '../Components/CardFiles.js';
@@ -31,6 +29,8 @@ import DocumentPicker from 'react-native-document-picker';
 
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
+
+import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
 const width = Dimensions.get('screen').width;
 
@@ -111,6 +111,11 @@ export class DemandsDetailScreen extends Component{
                 selected: []
             },
             status: {
+                arrayCombo: [
+                    <Picker.Item key={0} value={0} label="SELECIONE O STATUS" />,
+                    <Picker.Item key={10} value={10} label="AGUARDANDO ATENDIMENTO" />,
+                    <Picker.Item key={50} value={50} label="EM ATENDIMENTO" />
+                ],
                 statusId: 0,
                 enabled: true
             },
@@ -312,7 +317,16 @@ export class DemandsDetailScreen extends Component{
     
             let resultContacts = await crudService.get(`comboDemands/getComboContact/${clientInList.clientHelpDeskId}`, this.state.data.userData.token);
             
-            if(resultContacts.status == 401){
+            if(resultContacts.status == 200){
+                this.setState({
+                    contact: {
+                        array: [...resultContacts.data],
+                        selected: this.state.contact.selected,
+                        enabled: this.state.contact.enabled
+                    }
+                }, this.populateContact);
+            }
+            else if(resultContacts.status == 401){
                 Alert.alert(
                     "Sessão Expirada",
                     "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -333,7 +347,7 @@ export class DemandsDetailScreen extends Component{
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
                             style: "ok"
                         }
                     ],
@@ -341,18 +355,32 @@ export class DemandsDetailScreen extends Component{
                 );
             }
             else{
-                this.setState({
-                    contact: {
-                        array: [...resultContacts.data],
-                        selected: this.state.contact.selected,
-                        enabled: this.state.contact.enabled
-                    }
-                }, this.populateContact);
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
             }
 
             let resultAreas = await crudService.get(`comboDemands/getComboArea?clientHelpDeskId=${clientInList.clientHelpDeskId}&PersonId=${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
-                
-            if(resultAreas.status == 401){
+            
+            if(resultAreas.status == 200){
+                this.setState({
+                    area:{
+                        array: [...resultAreas.data],
+                        selected: this.state.area.selected,
+                        enabled: this.state.area.enabled
+                    }
+                }, this.populateArea);
+            }
+            else if(resultAreas.status == 401){
                 Alert.alert(
                     "Sessão Expirada",
                     "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -369,11 +397,11 @@ export class DemandsDetailScreen extends Component{
             else if(resultAreas.status == 400){
                 Alert.alert(
                     "Erro",
-                    resultContacts.data[0],
+                    resultAreas.data[0],
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
                             style: "ok"
                         }
                     ],
@@ -381,18 +409,32 @@ export class DemandsDetailScreen extends Component{
                 );
             }
             else{
-                this.setState({
-                    area:{
-                        array: [...resultAreas.data],
-                        selected: this.state.area.selected,
-                        enabled: this.state.area.enabled
-                    }
-                }, this.populateArea);
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
             }
 
             let resultProducts = await crudService.get(`comboDemands/getComboProduct/${itemValue}`, this.state.data.userData.token);
                 
-            if(resultProducts.status == 401){
+            if(resultProducts.status == 200){
+                this.setState({
+                    products: {
+                        listProducts: resultProducts.data,
+                        selectOrChange: this.state.products.selectOrChange,
+                        selected: this.state.products.selected
+                    }
+                })
+            }
+            else if(resultProducts.status == 401){
                 Alert.alert(
                     "Sessão Expirada",
                     "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -409,11 +451,11 @@ export class DemandsDetailScreen extends Component{
             else if(resultProducts.status == 400){
                 Alert.alert(
                     "Erro",
-                    resultContacts.data[0],
+                    resultProducts.data[0],
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
                             style: "ok"
                         }
                     ],
@@ -421,13 +463,18 @@ export class DemandsDetailScreen extends Component{
                 );
             }
             else{
-                this.setState({
-                    products: {
-                        listProducts: resultProducts.data,
-                        selectOrChange: this.state.products.selectOrChange,
-                        selected: this.state.products.selected
-                    }
-                })
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
             }
         }
         else{
@@ -547,7 +594,16 @@ export class DemandsDetailScreen extends Component{
 
             let resultCategory = await crudService.get(`comboDemands/getComboCategory/${itemValue}`, this.state.data.userData.token);
             
-            if(resultCategory.status == 401){
+            if(resultCategory.status == 200){
+                this.setState({
+                    category: {
+                        array: [...resultCategory.data],
+                        enabled: this.state.category.enabled,
+                        selected: 0
+                    }
+                }, this.populateCategory);
+            }
+            else if(resultCategory.status == 401){
                 Alert.alert(
                     "Sessão Expirada",
                     "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -564,11 +620,11 @@ export class DemandsDetailScreen extends Component{
             else if(resultCategory.status == 400){
                 Alert.alert(
                     "Erro",
-                    resultContacts.data[0],
+                    resultCategory.data[0],
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
                             style: "ok"
                         }
                     ],
@@ -576,13 +632,18 @@ export class DemandsDetailScreen extends Component{
                 );
             }
             else{
-                this.setState({
-                    category: {
-                        array: [...resultCategory.data],
-                        enabled: this.state.category.enabled,
-                        selected: 0
-                    }
-                }, this.populateCategory);
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
             }
         }
         else{
@@ -651,7 +712,16 @@ export class DemandsDetailScreen extends Component{
 
             let resultSubject = await crudService.get(`comboDemands/getComboSubject/${itemValue}`, this.state.data.userData.token);
             
-            if(resultSubject.status == 401){
+            if(resultSubject.status == 200){
+                this.setState({
+                    subject: {
+                        array: [...resultSubject.data],
+                        enabled: this.state.subject.enabled,
+                        selected: 0
+                    }
+                }, this.populateSubject);
+            }
+            else if(resultSubject.status == 401){
                 Alert.alert(
                     "Sessão Expirada",
                     "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -668,11 +738,11 @@ export class DemandsDetailScreen extends Component{
             else if(resultSubject.status == 400){
                 Alert.alert(
                     "Erro",
-                    resultContacts.data[0],
+                    resultSubject.data[0],
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
                             style: "ok"
                         }
                     ],
@@ -680,13 +750,18 @@ export class DemandsDetailScreen extends Component{
                 );
             }
             else{
-                this.setState({
-                    subject: {
-                        array: [...resultSubject.data],
-                        enabled: this.state.subject.enabled,
-                        selected: 0
-                    }
-                }, this.populateSubject);
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
             }
         }
         else{
@@ -791,6 +866,7 @@ export class DemandsDetailScreen extends Component{
             ],
             chooseFromLibraryButtonTitle: null,
             takePhotoButtonTitle: null,
+            cancelButtonTitle: "CANCELAR"
         }, async (datas) => {
             if(datas.customButton == 'photo'){
                 ImagePicker.launchCamera({mediaType: 'photo'}, (response) => {
@@ -868,7 +944,117 @@ export class DemandsDetailScreen extends Component{
     showDemadsId = () => {
 
         if(this.state.data.demandsId != undefined){
-            return <Text style={{marginBottom:10, marginTop:20, fontSize: 20, fontWeight: "bold"}}>Chamado: {this.state.dataDemands.codeId}</Text>
+            return  <>
+                        <Text style={{marginBottom:5}}>Número:</Text>
+                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                            <TextInput style={styles.input} 
+                                editable={false}
+                                value={this.state.dataDemands.codeId.toString()}/>
+                        </View>
+                    </>
+        }
+    }
+
+    showCreationDate = () => {
+        
+        if(this.state.data.demandsId != undefined){
+            return  <>
+                        <Text style={{marginBottom:5}}>Data Criação:</Text>
+                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                            <TextInput style={styles.input} 
+                                editable={false}
+                                value={moment(this.state.dataDemands.creationDate).format("DD/MM/YYYY HH:mm")}/>
+                        </View>
+                    </>
+        }
+    }
+
+    showCreatedBy = () => {
+        
+        if(this.state.data.demandsId != undefined){
+            return  <>
+                        <Text style={{marginBottom:5}}>Criado Por:</Text>
+                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                            <TextInput style={styles.input} 
+                                editable={false}
+                                value={this.state.dataDemands.createdBy}/>
+                        </View>
+                    </>
+        }
+    }
+
+    showResponsibleOperator = () => {
+        
+        if(this.state.data.demandsId != undefined){
+            let operator = this.state.dataDemands.responsibleOperator != "" ? this.state.dataDemands.responsibleOperator : "Nenhum Operador Responsável"
+
+            return  <>
+                        <Text style={{marginBottom:5}}>Operador Responsável:</Text>
+                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                            <TextInput style={styles.input} 
+                                editable={false}
+                                value={operator}/>
+                        </View>
+                    </>
+        }
+    }
+
+    showEndDate = () => {
+        console.log(this.state.data)
+        if(this.state.data.demandsId != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
+            return  <>
+                        <Text style={{marginBottom:5}}>Data de Finalização:</Text>
+                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                            <TextInput style={styles.input} 
+                                editable={false}
+                                value={moment(this.state.dataDemands.endDate).format("DD/MM/YYYY HH:mm")}/>
+                        </View>
+                    </>
+        }
+    }
+
+    showFinishingUser = () => {
+        
+        if(this.state.data.demandsId != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
+            return  <>
+                        <Text style={{marginBottom:5}}>Finalizado Por:</Text>
+                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                            <TextInput style={styles.input} 
+                                editable={false}
+                                value={this.state.dataDemands.finishingUser}/>
+                        </View>
+                    </>
+        }
+    }
+
+    showTotalService = () => {
+        
+        if(this.state.data.demandsId != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
+            return  <>
+                        <Text style={{marginBottom:5, marginTop:10}}>Tempo de Duração:</Text>
+                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                            <TextInput style={styles.input} 
+                                editable={false}
+                                value={this.state.dataDemands.totalService}/>
+                        </View>
+                    </>
+        }
+    }
+
+    showDescription = () => {
+
+        if(this.state.data.demandsId != undefined){
+            return  <>
+                        <Text style={{marginBottom:5, marginTop: 10}}>Descrição:</Text>
+                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>             
+                            <TextInput
+                                editable={false}
+                                multiline={true}
+                                numberOfLines={3}
+                                onChangeText={(text) => this.setState({text})}
+                                value={this.state.dataDemands.description}/>
+                        </View>
+                    </>
         }
     }
 
@@ -936,12 +1122,14 @@ export class DemandsDetailScreen extends Component{
 
                 return <CardFiles 
                             imageUri={path}
-                            name={attachment.fileName}
+                            attachment={attachment}
                             left={number}
+                            userData={this.state.data.userData}
+                            navigation={this.props.navigation}
                         />
             });
 
-            let component = <View style={{ height: 130, marginTop: 20 }}>
+            let component = <View style={{ height: 130, marginTop: 10 }}>
                                 <ScrollView
                                     horizontal={true}
                                     showsHorizontalScrollIndicator={false}
@@ -981,6 +1169,7 @@ export class DemandsDetailScreen extends Component{
                 arrayCombo: [...this.state.area.arrayCombo]
             },
             status: {
+                arrayCombo: [...this.state.status.arrayCombo],
                 statusId: this.state.status.statusId,
                 enabled: false
             },
@@ -1034,9 +1223,12 @@ export class DemandsDetailScreen extends Component{
                                             
                                             <Text h4 style={{marginBottom:10}}>Informações:</Text>
                                             {this.showDemadsId()}
+                                            {this.showCreationDate()}
+                                            {this.showCreatedBy()}
+                                            {this.showResponsibleOperator()}
                                             
                                             <Text style={{marginBottom:5}}>Cliente:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
                                                 <Picker
                                                     enabled={this.state.client.enabled}
                                                     style={pickerStyle}
@@ -1049,7 +1241,7 @@ export class DemandsDetailScreen extends Component{
                                             </View>
                 
                                             <Text style={{marginBottom:5}}>Contato Cliente:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
                                                 <Picker
                                                     enabled={this.state.contact.enabled}
                                                     style={pickerStyle}
@@ -1069,7 +1261,7 @@ export class DemandsDetailScreen extends Component{
                                             </View>
                 
                                             <Text style={{marginBottom:5}}>Prioridade:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>                
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
                                                 <Picker
                                                     enabled={this.state.priority.enabled}
                                                     style={pickerStyle}
@@ -1089,7 +1281,7 @@ export class DemandsDetailScreen extends Component{
                                             </View>
                 
                                             <Text style={{marginBottom:5}}>Área:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>                
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
                                                 <Picker
                                                     enabled={this.state.area.enabled}
                                                     style={pickerStyle}
@@ -1102,7 +1294,7 @@ export class DemandsDetailScreen extends Component{
                                             </View>
                 
                                             <Text style={{marginBottom:5}}>Categoria:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>                
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
                                                 <Picker
                                                     enabled={this.state.category.enabled}
                                                     style={pickerStyle}
@@ -1115,7 +1307,7 @@ export class DemandsDetailScreen extends Component{
                                             </View>
                                             
                                             <Text style={{marginBottom:5}}>Assunto:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>                
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
                                                 <Picker
                                                     enabled={this.state.subject.enabled}
                                                     style={pickerStyle}
@@ -1128,7 +1320,7 @@ export class DemandsDetailScreen extends Component{
                                             </View>
                 
                                             <Text style={{marginBottom:5}}>Status:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>                
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
                                                 <Picker
                                                     enabled={this.state.status.enabled}
                                                     style={pickerStyle}
@@ -1137,18 +1329,17 @@ export class DemandsDetailScreen extends Component{
                                                         this.setState({
                                                             status: {
                                                                 statusId: itemValue,
-                                                                enabled: this.state.status.enabled
+                                                                enabled: this.state.status.enabled,
+                                                                arrayCombo: [...this.state.status.arrayCombo]
                                                             }
                                                         })
                                                     }>
-                                                    <Picker.Item key={0} value={0} label="SELECIONE O STATUS" />
-                                                    <Picker.Item key={10} value={10} label="AGUARDANDO ATENDIMENTO" />
-                                                    <Picker.Item key={50} value={50} label="EM ATENDIMENTO" />
+                                                    {this.state.status.arrayCombo}
                                                 </Picker>
                                             </View>
                 
                                             <Text style={{marginBottom:5}}>Nível Suporte:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>                
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
                                                 <Picker
                                                     enabled={this.state.level.enabled}
                                                     style={pickerStyle}
@@ -1195,6 +1386,10 @@ export class DemandsDetailScreen extends Component{
                                                     value={this.state.switch.isEnabled}
                                                 />
                                             </View>
+
+                                            {this.showTotalService()}
+                                            {this.showEndDate()}
+                                            {this.showFinishingUser()}
                                                 
                                             <Text h4 style={{marginBottom:10, marginTop: 20}}>Equipamento:</Text>
                                             {this.state.products.selected}
@@ -1204,7 +1399,7 @@ export class DemandsDetailScreen extends Component{
                                                 </TouchableOpacity>
                                             </View>
                                                 
-                                            <Text h4 style={{marginBottom:10}}>Anexos:</Text>
+                                            <Text h4 style={{marginTop: 10}}>Anexos:</Text>
                                             {this.state.attachmentsList}
                 
                                             <View style={{marginTop:10, marginBottom:10}}>
@@ -1212,6 +1407,8 @@ export class DemandsDetailScreen extends Component{
                                                     <Text>Selecione os arquivos</Text>
                                                 </TouchableOpacity>
                                             </View>
+                                            
+                                            {this.showDescription()}
                 
                                             <RBSheet
                                                 ref={ref => {
@@ -1220,6 +1417,7 @@ export class DemandsDetailScreen extends Component{
                                                 closeOnDragDown={true}
                                                 closeOnPressMask={false}
                                                 animationType={"slide"}
+                                                closeDuration={0}
                                                 customStyles={{
                                                     wrapper: {
                                                         backgroundColor: "rgba(0,0,0,0.5)"
@@ -1261,7 +1459,17 @@ export class DemandsDetailScreen extends Component{
         
         let resultClients = await crudService.get(`comboDemands/getComboClients/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
         
-        if(resultClients.status == 401){
+        if(resultClients.status == 200){
+            this.setState({
+                client: {
+                    array: [...resultClients.data],
+                    selected: this.state.client.selected,
+                    enabled: true,
+                    arrayCombo: this.state.client.arrayCombo
+                }
+            }, this.populateClient);
+        }
+        else if(resultClients.status == 401){
             Alert.alert(
                 "Sessão Expirada",
                 "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -1278,11 +1486,11 @@ export class DemandsDetailScreen extends Component{
         else if(resultClients.status == 400){
             Alert.alert(
                 "Erro",
-                resultContacts.data[0],
+                resultClients.data[0],
                 [
                     {
                         text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
                         style: "ok"
                     }
                 ],
@@ -1290,19 +1498,33 @@ export class DemandsDetailScreen extends Component{
             );
         }
         else{
-            this.setState({
-                client: {
-                    array: [...resultClients.data],
-                    selected: this.state.client.selected,
-                    enabled: true,
-                    arrayCombo: this.state.client.arrayCombo
-                }
-            }, this.populateClient);
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
         }
 
         let resultPriority = await crudService.get(`comboDemands/getComboPriority/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
         
-        if(resultPriority.status == 401){
+        if(resultPriority.status == 200){
+            this.setState({
+                priority: {
+                    array: [...resultPriority.data],
+                    selected: this.state.priority.selected,
+                    enabled: true,
+                    arrayCombo: this.state.priority.arrayCombo
+                }
+            }, this.populatePriority);
+        }
+        else if(resultPriority.status == 401){
             Alert.alert(
                 "Sessão Expirada",
                 "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -1319,11 +1541,11 @@ export class DemandsDetailScreen extends Component{
         else if(resultPriority.status == 400){
             Alert.alert(
                 "Erro",
-                resultContacts.data[0],
+                resultPriority.data[0],
                 [
                     {
                         text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsListScreen'),
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
                         style: "ok"
                     }
                 ],
@@ -1331,48 +1553,24 @@ export class DemandsDetailScreen extends Component{
             );
         }
         else{
-            this.setState({
-                priority: {
-                    array: [...resultPriority.data],
-                    selected: this.state.priority.selected,
-                    enabled: true,
-                    arrayCombo: this.state.priority.arrayCombo
-                }
-            }, this.populatePriority);
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
         }
 
         if(this.state.data.demandsId != undefined){
             let getDemands = await crudService.get(`demands/${this.state.data.demandsId}`, this.state.data.userData.token);
             
-            if(getDemands.status == 401){
-                Alert.alert(
-                    "Sessão Expirada",
-                    "Sua sessão expirou. Por favor, realize o login novamente.",
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
-            }
-            else if(getDemands.status == 400){
-                Alert.alert(
-                    "Erro",
-                    resultContacts.data[0],
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsListScreen'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
-            }
-            else{
+            if(getDemands.status == 200){
                 this.changeClient(getDemands.data.clientId);
                 this.changeArea(getDemands.data.areaId);
     
@@ -1414,6 +1612,10 @@ export class DemandsDetailScreen extends Component{
                         arrayCombo: [...this.state.area.arrayCombo]
                     },
                     status: {
+                        arrayCombo: [...this.state.status.arrayCombo, 
+                            <Picker.Item key={60} value={60} label="FINALIZADO PELO CLIENTE" />,
+                            <Picker.Item key={70} value={70} label="FINALIZADO PELO OPERADOR" />
+                        ],
                         statusId: getDemands.data.statusId,
                         enabled: false
                     },
@@ -1427,6 +1629,48 @@ export class DemandsDetailScreen extends Component{
                         selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
                     }
                 }, this.afterDidMount);
+            }
+            else if(getDemands.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(getDemands.status == 400){
+                Alert.alert(
+                    "Erro",
+                    getDemands.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
             }
         }
         else{
