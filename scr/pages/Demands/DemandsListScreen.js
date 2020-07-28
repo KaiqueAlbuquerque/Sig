@@ -15,7 +15,7 @@ import COLORS from '../../styles/Colors.js';
 class MyListItem extends PureComponent {
 	render() {
 		return (
-			<TouchableOpacity onPress={() => this.props.navigation.navigate('DemandsDetail', {userData: this.props.data, demandsId: this.props.item.ticketId})}>
+			<TouchableOpacity onPress={() => this.props.navigation.navigate('DemandsDetail', {userData: this.props.data, demandsId: this.props.item.ticketId, createDemands: {}})}>
 				<Card containerStyle={{ borderRadius: 15 }}>
 					<Text style={styles.textDemands}>Chamado {this.props.item.code}</Text>
 					<Text>
@@ -59,6 +59,7 @@ export default function DemandsListScreen(props){
 	}, [refreshing]);
 
 	const getDemands = async () => {
+		
 		if (!onEndReachedCalledDuringMomentum) {
 			
 			if (listDemands.loading) return;
@@ -85,7 +86,7 @@ export default function DemandsListScreen(props){
                     [
                         {
                             text: "Ok",
-                            onPress: () => props.navigation.navigate('LoginEmailScreen'),
+                            onPress: () => props.navigation.navigate('LoginEmail'),
                             style: "ok"
                         }
                     ],
@@ -125,7 +126,7 @@ export default function DemandsListScreen(props){
 		}
 	}
 
-	const handlerefresh = () => {
+	const handlerefresh = async () => {
 		setRefreshing(true);
 
 		setListDemands({
@@ -133,6 +134,10 @@ export default function DemandsListScreen(props){
 			page: 0,
 			loading: false,
 		});
+
+		setOnEndReachedCalledDuringMomentum(false);
+
+		await getDemands();
 	}
 
 	const renderFooter = () => {
@@ -220,7 +225,7 @@ export default function DemandsListScreen(props){
 						<ActionButton.Item
 							buttonColor="#9b59b6"
 							title="Novo Chamado"
-							onPress={() => props.navigation.navigate("DemandsDetail", {userData: data})}
+							onPress={() => props.navigation.navigate("DemandsDetail", {userData: data, createDemands: {}})}
 						>
 							<Icon name='plus' style={styles.actionButtonIcon} />
 						</ActionButton.Item>

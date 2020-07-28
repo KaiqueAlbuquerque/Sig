@@ -30,14 +30,12 @@ import DocumentPicker from 'react-native-document-picker';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
 
-import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
-
 const width = Dimensions.get('screen').width;
 
 class MyListItem extends PureComponent {
 	render() {
 		return (
-			<TouchableOpacity onPress={() => console.log("aqui")}>
+			<TouchableOpacity onPress={() => this.props.changeProduct(this.props.item)}>
 				<Card containerStyle={{ borderRadius: 15 }}>
                     <Text>
                         <Text style={styles.textBold}>Código interno:</Text> {this.props.item.internalCode}
@@ -133,8 +131,36 @@ export class DemandsDetailScreen extends Component{
                 isEnabled: false,
                 disabled: false
             },
-            isLoading: true
+            isLoading: true,
+            filesSend: [],
+            savedHere: false
         }
+    }
+
+    changeProduct = (product) => {
+
+        let labelEquipment = "Nenhum Equipamento!";
+        if(product.internalCode != null && product.internalCode != "" && product.productName != null && product.productName != ""){
+            labelEquipment = `${product.internalCode} - ${product.productName}`;
+        }
+        else if((product.internalCode == null || product.internalCode == "") && (product.productName != null && product.productName != "")){
+            labelEquipment = `${product.productName}`;
+        }
+        else if((product.internalCode != null && product.internalCode != "") && (product.productName == null || product.productName == "")){
+            labelEquipment = `${product.internalCode}`;
+        }
+
+        this.setState({
+            products: {
+                listProducts: this.state.products.listProducts,
+                selectOrChange: "Trocar",
+                selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
+            }
+        });
+
+        this.props.navigation.state.params.createDemands.productId = product.productId;
+
+        this.RBSheet.close();
     }
 
     populateClient = () => {
@@ -185,7 +211,9 @@ export class DemandsDetailScreen extends Component{
                     })   
                 ]
             }
-        })        
+        });
+        
+        this.props.navigation.state.params.createDemands.contactId = this.state.contact.selected;
     }
 
     populateArea = () => {
@@ -202,7 +230,9 @@ export class DemandsDetailScreen extends Component{
                     })   
                 ]
             }
-        })        
+        });
+        
+        this.props.navigation.state.params.createDemands.sectorHelpDeskId = this.state.area.selected;     
     }
 
     populateCategory = () => {
@@ -224,7 +254,9 @@ export class DemandsDetailScreen extends Component{
             {
                 this.changeCategory(this.state.dataDemands.categoryId);
             }
-        })
+        });
+
+        this.props.navigation.state.params.createDemands.categoryId = this.state.category.selected;
     }
     
     populateSubject = () => {
@@ -246,7 +278,62 @@ export class DemandsDetailScreen extends Component{
             {
                 this.changeSubject(this.state.dataDemands.subjectId);
             }
-        })        
+        });
+        
+        this.props.navigation.state.params.createDemands.problemId = this.state.subject.selected;
+    }
+
+    changeLevel = (itemValue) => {
+
+        this.setState({
+            level: {
+                levelId: itemValue,
+                enabled: this.state.level.enabled
+            }
+        });
+
+        this.props.navigation.state.params.createDemands.supportLevel = itemValue;
+    }
+
+    changeStatus = (itemValue) => {
+
+        this.setState({
+            status: {
+                statusId: itemValue,
+                enabled: this.state.status.enabled,
+                arrayCombo: [...this.state.status.arrayCombo]
+            }
+        });
+
+        this.props.navigation.state.params.createDemands.currentStatusId = itemValue;
+    }
+
+    changePriority = (itemValue) => {
+
+        this.setState({
+            priority: {
+                array: [...this.state.priority.array],
+                selected: itemValue,
+                enabled: this.state.priority.enabled,
+                arrayCombo: [...this.state.priority.arrayCombo]
+            }
+        });
+
+        this.props.navigation.state.params.createDemands.priorityId = itemValue;
+    }
+
+    changeContact = (itemValue) => {
+
+        this.setState({
+            contact: {
+                array: [...this.state.contact.array],
+                selected: itemValue,
+                enabled: this.state.contact.enabled,
+                arrayCombo: [...this.state.contact.arrayCombo]
+            }
+        });
+
+        this.props.navigation.state.params.createDemands.contactId = itemValue;
     }
 
     changeClient = async (itemValue) => {
@@ -271,7 +358,15 @@ export class DemandsDetailScreen extends Component{
             }
         });    
 
+        let clientInList = this.state.client.array.find((cli) => {
+            return cli.clientId == itemValue;
+        })
+
+        this.props.navigation.state.params.createDemands.forecast = '';
+
         if(itemValue != 0){
+            this.props.navigation.state.params.createDemands.clientHelpDeskId = clientInList.clientHelpDeskId;
+
             this.setState({
                 category: {
                     array: [...this.state.category.array],
@@ -288,7 +383,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE A ÁREA`} />
                         ]
                     }
-                })  
+                });
+                
+                this.props.navigation.state.params.createDemands.categoryId = this.state.category.selected;
             })
             this.setState({
                 subject: {
@@ -306,14 +403,12 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE A ÁREA`} />
                         ]
                     }
-                }) 
+                });
+                
+                this.props.navigation.state.params.createDemands.problemId = this.state.subject.selected;
             })
 
             let crudService = new CrudService();
-            
-            let clientInList = this.state.client.array.find((cli) => {
-                return cli.clientId == itemValue;
-            })
     
             let resultContacts = await crudService.get(`comboDemands/getComboContact/${clientInList.clientHelpDeskId}`, this.state.data.userData.token);
             
@@ -333,7 +428,7 @@ export class DemandsDetailScreen extends Component{
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
                             style: "ok"
                         }
                     ],
@@ -387,7 +482,7 @@ export class DemandsDetailScreen extends Component{
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
                             style: "ok"
                         }
                     ],
@@ -441,7 +536,7 @@ export class DemandsDetailScreen extends Component{
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
                             style: "ok"
                         }
                     ],
@@ -478,6 +573,8 @@ export class DemandsDetailScreen extends Component{
             }
         }
         else{
+            this.props.navigation.state.params.createDemands.clientHelpDeskId = 0;
+
             this.setState({
                 contact: {
                     array: [],
@@ -494,7 +591,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE O CLIENTE`} />
                         ]
                     }
-                })
+                });
+
+                this.props.navigation.state.params.createDemands.contactId = this.state.contact.selected;
             })
             this.setState({
                 area: {
@@ -512,7 +611,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE O CLIENTE`} />
                         ]
                     }
-                })
+                });
+
+                this.props.navigation.state.params.createDemands.sectorHelpDeskId = this.state.area.selected;
             })
             this.setState({
                 category: {
@@ -530,7 +631,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE O CLIENTE`} />
                         ]
                     }
-                })
+                });
+
+                this.props.navigation.state.params.createDemands.categoryId = this.state.category.selected;
             })
             this.setState({
                 subject: {
@@ -548,7 +651,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE O CLIENTE`} />
                         ]
                     }
-                })
+                });
+
+                this.props.navigation.state.params.createDemands.problemId = this.state.subject.selected;
             })
         }
     }
@@ -570,6 +675,9 @@ export class DemandsDetailScreen extends Component{
             }
         });
 
+        this.props.navigation.state.params.createDemands.forecast = '';
+        this.props.navigation.state.params.createDemands.sectorHelpDeskId = itemValue;
+
         if(itemValue != 0){
             this.setState({
                 subject: {
@@ -587,7 +695,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE A CATEGORIA`} />,
                         ],
                     }                    
-                })
+                });
+
+                this.props.navigation.state.params.createDemands.problemId = this.state.subject.selected;
             });
 
             let crudService = new CrudService();
@@ -610,7 +720,7 @@ export class DemandsDetailScreen extends Component{
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
                             style: "ok"
                         }
                     ],
@@ -663,7 +773,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE A ÁREA`} />
                         ],
                     }
-                })
+                });
+
+                this.props.navigation.state.params.createDemands.problemId = this.state.subject.selected;
             })
             this.setState({
                 category: {
@@ -681,7 +793,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE A ÁREA`} />
                         ],
                     }
-                })
+                });
+
+                this.props.navigation.state.params.createDemands.categoryId = this.state.category.selected;
             })
         }
     }
@@ -707,6 +821,9 @@ export class DemandsDetailScreen extends Component{
             }
         });
 
+        this.props.navigation.state.params.createDemands.forecast = '';
+        this.props.navigation.state.params.createDemands.categoryId = itemValue;
+
         if(itemValue != 0){
             let crudService = new CrudService();
 
@@ -728,7 +845,7 @@ export class DemandsDetailScreen extends Component{
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
                             style: "ok"
                         }
                     ],
@@ -781,7 +898,9 @@ export class DemandsDetailScreen extends Component{
                             <Picker.Item key={0} value={0} label={`SELECIONE A CATEGORIA`} />,
                         ],
                     }
-                })                
+                });
+                
+                this.props.navigation.state.params.createDemands.problemId = this.state.subject.selected;
             })
         }
     }
@@ -811,10 +930,11 @@ export class DemandsDetailScreen extends Component{
                         isEnabled: false,        
                         disabled: this.state.switch.disabled
                     }
-                })
+                });
+
+                this.props.navigation.state.params.createDemands.forecast = moment(slaReturn.expectedDate).format("YYYY/MM/DD HH:mm");
             }
             else{
-                
                 if(this.state.dataDemands.forecast != null){
                     
                     this.setState({
@@ -824,7 +944,9 @@ export class DemandsDetailScreen extends Component{
                             isEnabled: this.state.dataDemands.noExpectedDate,        
                             disabled: this.state.switch.disabled
                         }      
-                    })
+                    });
+
+                    this.props.navigation.state.params.createDemands.forecast = moment(this.state.dataDemands.forecast).format("YYYY/MM/DD HH:mm");
                 }
                 else{
 
@@ -835,7 +957,9 @@ export class DemandsDetailScreen extends Component{
                             isEnabled: this.state.dataDemands.noExpectedDate,        
                             disabled: this.state.switch.disabled
                         }         
-                    })
+                    });
+
+                    this.props.navigation.state.params.createDemands.forecast = "";
                 }
 
                 enable = false;
@@ -852,7 +976,119 @@ export class DemandsDetailScreen extends Component{
                 selected: itemValue, 
                 arrayCombo: [...this.state.subject.arrayCombo]   
             }     
+        });
+
+        this.props.navigation.state.params.createDemands.problemId = itemValue;
+    }
+
+    removeAttachment = (index) => {
+        
+        this.setState({
+            filesSend: this.state.filesSend.filter((attachment) => {
+                if(attachment.index != index){
+                    return attachment;
+                };
+            })
+        }, () => {
+            this.insertFileGallery();
+            this.props.navigation.state.params.createDemands.filesSend = this.state.filesSend;
         })
+    }
+
+    insertFileGallery = () => {
+        
+        if(this.state.filesSend.length >= 0){
+            
+            var listAttachments = this.state.filesSend.map((attachment, index) => {
+                
+                attachment.index = index;
+
+                let number = 20;
+                if(index == 0){
+                    number = 0
+                }
+
+                let arrayName = attachment.name.split('.');
+                let iconName = arrayName[arrayName.length-1];
+                iconName = iconName.toLowerCase();
+                let path = '';
+
+                if(iconName == "csv"){
+                    path = require("../../assets/img/icons/csv.png");
+                }
+                else if(iconName == "doc" || iconName == "docx"){
+                    path = require("../../assets/img/icons/doc.png");
+                }
+                else if(iconName == "exe"){
+                    path = require("../../assets/img/icons/exe.png");
+                }
+                else if(iconName == "jpg" || iconName == "jpeg"){
+                    path = require("../../assets/img/icons/jpg.png");
+                }
+                else if(iconName == "mp3"){
+                    path = require("../../assets/img/icons/mp3.png");
+                }
+                else if(iconName == "iso" ){
+                    path = require("../../assets/img/icons/iso.png");
+                }
+                else if(iconName == "mp4"){
+                    path = require("../../assets/img/icons/mp4.png");
+                }
+                else if(iconName == "pdf"){
+                    path = require("../../assets/img/icons/pdf.png");
+                }
+                else if(iconName == "png"){
+                    path = require("../../assets/img/icons/png.png");
+                }
+                else if(iconName == "ppt" || iconName == "pptx"){
+                    path = require("../../assets/img/icons/ppt.png");
+                }
+                else if(iconName == "txt"){
+                    path = require("../../assets/img/icons/txt.png");
+                }
+                else if(iconName == "xls" || iconName == "xlsx"){
+                    path = require("../../assets/img/icons/xls.png");
+                }
+                else if(iconName == "xml"){
+                    path = require("../../assets/img/icons/xml.png");
+                }
+                else if(iconName == "zip" || iconName == "7z"){
+                    path = require("../../assets/img/icons/zip.png");
+                }
+                else{
+                    path = require("../../assets/img/icons/documento.png");
+                }
+
+                return <CardFiles 
+                            imageUri={path}
+                            attachment={attachment}
+                            left={number}
+                            userData={this.state.data.userData}
+                            navigation={this.props.navigation}
+                            removeAttachment={this.removeAttachment}
+                        />
+            });
+
+            if(this.state.filesSend.length > 0){
+                let component = <View style={{ height: 130, marginTop: 10 }}>
+                                    <ScrollView
+                                        horizontal={true}
+                                        showsHorizontalScrollIndicator={false}
+                                    >
+                                        {listAttachments}
+                                    </ScrollView>
+                                </View>
+
+                this.setState({
+                    attachmentsList: component
+                });
+            }
+            else{
+                this.setState({
+                    attachmentsList: []
+                });
+            }
+        }
     }
 
     openPicker = () => {
@@ -870,49 +1106,104 @@ export class DemandsDetailScreen extends Component{
         }, async (datas) => {
             if(datas.customButton == 'photo'){
                 ImagePicker.launchCamera({mediaType: 'photo'}, (response) => {
-                    console.log(response);
+                    
                 })
             }
             else if(datas.customButton == 'video'){
                 ImagePicker.launchCamera({mediaType: 'video'}, (response) => {
                     console.log(response);
+                    console.log("video");
+                    
+                    if(response.didCancel != undefined && !response.didCancel){
+                        let arrayPath = response.path.split("/");
+
+                        let file = {
+                            uri: response.uri,
+                            name: arrayPath[arrayPath.length-1],
+                            type: "video/mp4"
+                        };
+        
+                        this.setState({
+                            filesSend: [...this.state.filesSend, file]
+                        }, () => {
+                            this.insertFileGallery();
+                            this.props.navigation.state.params.createDemands.filesSend = this.state.filesSend;
+                        });
+                    }
                 })
             }
             else if(datas.customButton == 'files'){
                 try {
                     const results = await DocumentPicker.pickMultiple({
-                      type: [DocumentPicker.types.allFiles],
+                        type: [DocumentPicker.types.allFiles],
                     });
                     for (const res of results) {
-                      console.log(res);
+                        console.log(res);
+                        console.log("arquivos");
+                        
+                        let file = {
+                            uri: res.uri,
+                            name: res.name,
+                            type: res.type
+                        };
+        
+                        this.setState({
+                            filesSend: [...this.state.filesSend, file]
+                        }, () => {
+                            this.insertFileGallery();
+                            this.props.navigation.state.params.createDemands.filesSend = this.state.filesSend;
+                        });
                     }
                 } 
                 catch (err) {
                     if (DocumentPicker.isCancel(err)) {
-                      // User cancelled the picker, exit any dialogs or menus and move on
+                        // User cancelled the picker, exit any dialogs or menus and move on
                     } 
                     else {
-                      throw err;
+                        throw err;
                     }
                 }
             }
             else{
                 console.log(datas);
+                console.log("else");
+                
+                if(datas.didCancel != undefined && !datas.didCancel){
+                    let file = {
+                        uri: datas.uri,
+                        name: datas.fileName,
+                        type: datas.type
+                    };
+    
+                    this.setState({
+                        filesSend: [...this.state.filesSend, file]
+                    }, () => {
+                        this.insertFileGallery();
+                        this.props.navigation.state.params.createDemands.filesSend = this.state.filesSend;
+                    });
+                }
             }
         });
     }
 
     renderItem = ({ item }) => (
 		<MyListItem
-			item={item}
+            item={item}
+            changeProduct={this.changeProduct}
     	/>
     );
     
     handleConfirm = (datetime) => {
         this.setState({
             isDatePickerVisible: false,
-            expectedDateTime: moment(datetime).format("DD/MM/YYYY HH:mm")
-        })
+            expectedDateTime: moment(datetime).format("DD/MM/YYYY HH:mm"),
+            switch: {
+                isEnabled: false,        
+                disabled: this.state.switch.disabled
+            }
+        });
+
+        this.props.navigation.state.params.createDemands.forecast = moment(datetime).format("YYYY/MM/DD HH:mm");
     }
 
     hideDatePicker = () => {
@@ -932,18 +1223,21 @@ export class DemandsDetailScreen extends Component{
 
     toggleSwitch = () => {
 
+        this.props.navigation.state.params.createDemands.noExpectedDate = !this.state.switch.isEnabled;
+        this.props.navigation.state.params.createDemands.forecast = '';
+
         this.setState({
             switch: {
                 isEnabled: !this.state.switch.isEnabled,        
                 disabled: this.state.switch.disabled
             },
             expectedDateTime: ''
-        })
+        });
     }
 
-    showDemadsId = () => {
-
-        if(this.state.data.demandsId != undefined){
+    showDemandsId = () => {
+        
+        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined){
             return  <>
                         <Text style={{marginBottom:5}}>Número:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -957,7 +1251,7 @@ export class DemandsDetailScreen extends Component{
 
     showCreationDate = () => {
         
-        if(this.state.data.demandsId != undefined){
+        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined){
             return  <>
                         <Text style={{marginBottom:5}}>Data Criação:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -971,7 +1265,7 @@ export class DemandsDetailScreen extends Component{
 
     showCreatedBy = () => {
         
-        if(this.state.data.demandsId != undefined){
+        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined){
             return  <>
                         <Text style={{marginBottom:5}}>Criado Por:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -985,7 +1279,7 @@ export class DemandsDetailScreen extends Component{
 
     showResponsibleOperator = () => {
         
-        if(this.state.data.demandsId != undefined){
+        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined){
             let operator = this.state.dataDemands.responsibleOperator != "" ? this.state.dataDemands.responsibleOperator : "Nenhum Operador Responsável"
 
             return  <>
@@ -1000,8 +1294,8 @@ export class DemandsDetailScreen extends Component{
     }
 
     showEndDate = () => {
-        console.log(this.state.data)
-        if(this.state.data.demandsId != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
+        
+        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
             return  <>
                         <Text style={{marginBottom:5}}>Data de Finalização:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -1015,7 +1309,7 @@ export class DemandsDetailScreen extends Component{
 
     showFinishingUser = () => {
         
-        if(this.state.data.demandsId != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
+        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
             return  <>
                         <Text style={{marginBottom:5}}>Finalizado Por:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -1029,7 +1323,7 @@ export class DemandsDetailScreen extends Component{
 
     showTotalService = () => {
         
-        if(this.state.data.demandsId != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
+        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
             return  <>
                         <Text style={{marginBottom:5, marginTop:10}}>Tempo de Duração:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -1043,7 +1337,7 @@ export class DemandsDetailScreen extends Component{
 
     showDescription = () => {
 
-        if(this.state.data.demandsId != undefined){
+        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined){
             return  <>
                         <Text style={{marginBottom:5, marginTop: 10}}>Descrição:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>             
@@ -1055,6 +1349,346 @@ export class DemandsDetailScreen extends Component{
                                 value={this.state.dataDemands.description}/>
                         </View>
                     </>
+        }
+    }
+
+    showSaveButton = () => {
+        
+        if(this.state.data.demandsId == undefined){
+            return <TouchableWithoutFeedback onPress={() => this.saveDemands()}>
+                        <Icon
+                            name='save'
+                            color='#fff'
+                        />
+                    </TouchableWithoutFeedback>
+        }
+    }
+
+    saveDemands = async () => {
+        
+        this.setState({
+            isLoading: true
+        });
+
+        this.props.navigation.state.params.createDemands.signatureId = this.props.navigation.state.params.userData.userData.signatureId;
+        this.props.navigation.state.params.createDemands.userHelpDeskId = this.props.navigation.state.params.userData.userData.userHelpDeskId;
+        this.props.navigation.state.params.createDemands.userType = this.props.navigation.state.params.userData.userData.userType;
+
+        var data = new FormData();
+        data.append('Request', JSON.stringify(this.props.navigation.state.params.createDemands));
+
+        this.state.filesSend.forEach((file) => {
+            data.append('Files', file);
+        });
+        
+        let crudService = new CrudService();
+
+        let result = await crudService.postWithFile(`demands`, data, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            
+            this.setState({
+                savedHere: true
+            })
+
+            this.state.data.demandsId = result.data.demandsId;
+            this.props.navigation.state.params.createDemands.demandsId = result.data.demandsId;
+            await this.commonDidMount();
+
+            Alert.alert(
+                "Cadastrado com Sucesso.",
+                `Chamado ${result.data.codeId} criado com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    }
+
+    commonDidMount = async () => {
+
+        let crudService = new CrudService();
+        
+        let resultClients = await crudService.get(`comboDemands/getComboClients/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
+        
+        if(resultClients.status == 200){
+            this.setState({
+                client: {
+                    array: [...resultClients.data],
+                    selected: this.state.client.selected,
+                    enabled: true,
+                    arrayCombo: this.state.client.arrayCombo
+                }
+            }, this.populateClient);
+        }
+        else if(resultClients.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(resultClients.status == 400){
+            Alert.alert(
+                "Erro",
+                resultClients.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        let resultPriority = await crudService.get(`comboDemands/getComboPriority/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
+        
+        if(resultPriority.status == 200){
+            this.setState({
+                priority: {
+                    array: [...resultPriority.data],
+                    selected: this.state.priority.selected,
+                    enabled: true,
+                    arrayCombo: this.state.priority.arrayCombo
+                }
+            }, this.populatePriority);
+        }
+        else if(resultPriority.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(resultPriority.status == 400){
+            Alert.alert(
+                "Erro",
+                resultPriority.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        this.props.navigation.state.params.createDemands.supportLevel = 1;
+        
+        if(this.state.data.demandsId != undefined){
+            
+            let getDemands = await crudService.get(`demands/${this.state.data.demandsId}`, this.state.data.userData.token);
+            
+            if(getDemands.status == 200){
+                this.changeClient(getDemands.data.clientId);
+                this.changeArea(getDemands.data.areaId);
+    
+                let labelEquipment = "Nenhum Equipamento!";
+                if(getDemands.data.internalCodeEquipment != null && getDemands.data.internalCodeEquipment != "" && getDemands.data.equipment != null && getDemands.data.equipment != ""){
+                    labelEquipment = `${getDemands.data.internalCodeEquipment} - ${getDemands.data.equipment}`;
+                }
+                else if((getDemands.data.internalCodeEquipment == null || getDemands.data.internalCodeEquipment == "") && (getDemands.data.equipment != null && getDemands.data.equipment != "")){
+                    labelEquipment = `${getDemands.data.equipment}`;
+                }
+                else if((getDemands.data.internalCodeEquipment != null && getDemands.data.internalCodeEquipment != "") && (getDemands.data.equipment == null || getDemands.data.equipment == "")){
+                    labelEquipment = `${getDemands.data.internalCodeEquipment}`;
+                }
+                
+                this.setState({
+                    dataDemands: getDemands.data,
+                    client: {
+                        array: [...this.state.client.array],
+                        selected: getDemands.data.clientId,
+                        enabled: this.state.client.enabled,
+                        arrayCombo: [...this.state.client.arrayCombo]
+                    },
+                    priority: {
+                        array: [...this.state.priority.array],
+                        selected: getDemands.data.priorityId,
+                        enabled: this.state.priority.enabled,
+                        arrayCombo: [...this.state.priority.arrayCombo]
+                    },
+                    contact: {
+                        array: [...this.state.contact.array],
+                        selected: getDemands.data.contactId,
+                        enabled: this.state.contact.enabled,
+                        arrayCombo: [...this.state.contact.arrayCombo]
+                    },
+                    area: {
+                        array: [...this.state.area.array],
+                        selected: getDemands.data.areaId,
+                        enabled: this.state.area.enabled,
+                        arrayCombo: [...this.state.area.arrayCombo]
+                    },
+                    status: {
+                        arrayCombo: [...this.state.status.arrayCombo, 
+                            <Picker.Item key={60} value={60} label="FINALIZADO PELO CLIENTE" />,
+                            <Picker.Item key={70} value={70} label="FINALIZADO PELO OPERADOR" />
+                        ],
+                        statusId: getDemands.data.statusId,
+                        enabled: false
+                    },
+                    level: {
+                        levelId: getDemands.data.supportLevelId,
+                        enabled: false
+                    },
+                    products: {
+                        listProducts: this.state.products.listProducts,
+                        selectOrChange: "Trocar",
+                        selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
+                    }
+                }, this.afterDidMount);
+            }
+            else if(getDemands.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(getDemands.status == 400){
+                Alert.alert(
+                    "Erro",
+                    getDemands.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+        }
+        else{
+            this.setState({
+                isLoading: false
+            })
         }
     }
 
@@ -1182,8 +1816,7 @@ export class DemandsDetailScreen extends Component{
                 disabled: true
             },
             isLoading: false
-        })
-        
+        });
     }
 
 	render(){
@@ -1209,6 +1842,7 @@ export class DemandsDetailScreen extends Component{
                                                         />
                                                     </TouchableWithoutFeedback>
                                     }
+                                    rightComponent={this.showSaveButton()}
                                     centerComponent={<Text h4 style={{textAlign: 'center', color: '#fff'}}>Detalhes</Text>}
                                     containerStyle={{
                                         backgroundColor: COLORS.default,
@@ -1222,7 +1856,7 @@ export class DemandsDetailScreen extends Component{
                                         <View style={{lex: 1, width: width * 0.8, marginTop: 15}}>
                                             
                                             <Text h4 style={{marginBottom:10}}>Informações:</Text>
-                                            {this.showDemadsId()}
+                                            {this.showDemandsId()}
                                             {this.showCreationDate()}
                                             {this.showCreatedBy()}
                                             {this.showResponsibleOperator()}
@@ -1247,14 +1881,7 @@ export class DemandsDetailScreen extends Component{
                                                     style={pickerStyle}
                                                     selectedValue={this.state.contact.selected}
                                                     onValueChange={(itemValue, itemIndex) =>
-                                                        this.setState({
-                                                            contact: {
-                                                                array: [...this.state.contact.array],
-                                                                selected: itemValue,
-                                                                enabled: this.state.contact.enabled,
-                                                                arrayCombo: [...this.state.contact.arrayCombo]
-                                                            }
-                                                        })
+                                                        this.changeContact(itemValue)
                                                     }>
                                                     {this.state.contact.arrayCombo}
                                                 </Picker>
@@ -1267,14 +1894,7 @@ export class DemandsDetailScreen extends Component{
                                                     style={pickerStyle}
                                                     selectedValue={this.state.priority.selected}
                                                     onValueChange={(itemValue, itemIndex) =>
-                                                        this.setState({
-                                                            priority: {
-                                                                array: [...this.state.priority.array],
-                                                                selected: itemValue,
-                                                                enabled: this.state.priority.enabled,
-                                                                arrayCombo: [...this.state.priority.arrayCombo]
-                                                            }
-                                                        })
+                                                        this.changePriority(itemValue)
                                                     }>
                                                     {this.state.priority.arrayCombo}
                                                 </Picker>
@@ -1326,13 +1946,7 @@ export class DemandsDetailScreen extends Component{
                                                     style={pickerStyle}
                                                     selectedValue={this.state.status.statusId}
                                                     onValueChange={(itemValue, itemIndex) =>
-                                                        this.setState({
-                                                            status: {
-                                                                statusId: itemValue,
-                                                                enabled: this.state.status.enabled,
-                                                                arrayCombo: [...this.state.status.arrayCombo]
-                                                            }
-                                                        })
+                                                        this.changeStatus(itemValue)
                                                     }>
                                                     {this.state.status.arrayCombo}
                                                 </Picker>
@@ -1345,12 +1959,7 @@ export class DemandsDetailScreen extends Component{
                                                     style={pickerStyle}
                                                     selectedValue={this.state.level.levelId}
                                                     onValueChange={(itemValue, itemIndex) =>
-                                                        this.setState({
-                                                            level: {
-                                                                levelId: itemValue,
-                                                                enabled: this.state.level.enabled
-                                                            }
-                                                        })
+                                                        this.changeLevel(itemValue)
                                                     }>
                                                     <Picker.Item key={1} value={1} label="NIVEL 1" />
                                                     <Picker.Item key={2} value={2} label="NIVEL 2" />
@@ -1365,6 +1974,7 @@ export class DemandsDetailScreen extends Component{
                                                 onConfirm={this.handleConfirm}
                                                 onCancel={this.hideDatePicker}
                                                 mode={'datetime'}
+                                                is24Hour={true}
                                             />
 
                                             <Text style={{marginBottom:5}}>Data Prevista:</Text>
@@ -1455,228 +2065,29 @@ export class DemandsDetailScreen extends Component{
     }
     
     async componentDidMount(){
-        let crudService = new CrudService();
-        
-        let resultClients = await crudService.get(`comboDemands/getComboClients/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
-        
-        if(resultClients.status == 200){
-            this.setState({
-                client: {
-                    array: [...resultClients.data],
-                    selected: this.state.client.selected,
-                    enabled: true,
-                    arrayCombo: this.state.client.arrayCombo
-                }
-            }, this.populateClient);
-        }
-        else if(resultClients.status == 401){
-            Alert.alert(
-                "Sessão Expirada",
-                "Sua sessão expirou. Por favor, realize o login novamente.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else if(resultClients.status == 400){
-            Alert.alert(
-                "Erro",
-                resultClients.data[0],
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else{
-            Alert.alert(
-                "Erro",
-                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
+        await this.commonDidMount();
+    }
 
-        let resultPriority = await crudService.get(`comboDemands/getComboPriority/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
-        
-        if(resultPriority.status == 200){
+    async shouldComponentUpdate(){
+        if(this.props.navigation.state.params.createDemands.demandsId != undefined && !this.state.savedHere){
             this.setState({
-                priority: {
-                    array: [...resultPriority.data],
-                    selected: this.state.priority.selected,
-                    enabled: true,
-                    arrayCombo: this.state.priority.arrayCombo
-                }
-            }, this.populatePriority);
-        }
-        else if(resultPriority.status == 401){
-            Alert.alert(
-                "Sessão Expirada",
-                "Sua sessão expirou. Por favor, realize o login novamente.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else if(resultPriority.status == 400){
-            Alert.alert(
-                "Erro",
-                resultPriority.data[0],
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else{
-            Alert.alert(
-                "Erro",
-                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-
-        if(this.state.data.demandsId != undefined){
-            let getDemands = await crudService.get(`demands/${this.state.data.demandsId}`, this.state.data.userData.token);
+                isLoading: true
+            });
             
-            if(getDemands.status == 200){
-                this.changeClient(getDemands.data.clientId);
-                this.changeArea(getDemands.data.areaId);
-    
-                let labelEquipment = "Nenhum Equipamento!";
-                if(getDemands.data.internalCodeEquipment != null && getDemands.data.internalCodeEquipment != "" && getDemands.data.equipment != null && getDemands.data.equipment != ""){
-                    labelEquipment = `${getDemands.data.internalCodeEquipment} - ${getDemands.data.equipment}`;
-                }
-                else if((getDemands.data.internalCodeEquipment == null || getDemands.data.internalCodeEquipment == "") && (getDemands.data.equipment != null && getDemands.data.equipment != "")){
-                    labelEquipment = `${getDemands.data.equipment}`;
-                }
-                else if((getDemands.data.internalCodeEquipment != null && getDemands.data.internalCodeEquipment != "") && (getDemands.data.equipment == null || getDemands.data.equipment == "")){
-                    labelEquipment = `${getDemands.data.internalCodeEquipment}`;
-                }
-                
-                this.setState({
-                    dataDemands: getDemands.data,
-                    client: {
-                        array: [...this.state.client.array],
-                        selected: getDemands.data.clientId,
-                        enabled: this.state.client.enabled,
-                        arrayCombo: [...this.state.client.arrayCombo]
-                    },
-                    priority: {
-                        array: [...this.state.priority.array],
-                        selected: getDemands.data.priorityId,
-                        enabled: this.state.priority.enabled,
-                        arrayCombo: [...this.state.priority.arrayCombo]
-                    },
-                    contact: {
-                        array: [...this.state.contact.array],
-                        selected: getDemands.data.contactId,
-                        enabled: this.state.contact.enabled,
-                        arrayCombo: [...this.state.contact.arrayCombo]
-                    },
-                    area: {
-                        array: [...this.state.area.array],
-                        selected: getDemands.data.areaId,
-                        enabled: this.state.area.enabled,
-                        arrayCombo: [...this.state.area.arrayCombo]
-                    },
-                    status: {
-                        arrayCombo: [...this.state.status.arrayCombo, 
-                            <Picker.Item key={60} value={60} label="FINALIZADO PELO CLIENTE" />,
-                            <Picker.Item key={70} value={70} label="FINALIZADO PELO OPERADOR" />
-                        ],
-                        statusId: getDemands.data.statusId,
-                        enabled: false
-                    },
-                    level: {
-                        levelId: getDemands.data.supportLevelId,
-                        enabled: false
-                    },
-                    products: {
-                        listProducts: this.state.products.listProducts,
-                        selectOrChange: "Trocar",
-                        selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
-                    }
-                }, this.afterDidMount);
-            }
-            else if(getDemands.status == 401){
-                Alert.alert(
-                    "Sessão Expirada",
-                    "Sua sessão expirou. Por favor, realize o login novamente.",
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmailScreen'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
-            }
-            else if(getDemands.status == 400){
-                Alert.alert(
-                    "Erro",
-                    getDemands.data[0],
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsList'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
-            }
-            else{
-                Alert.alert(
-                    "Erro",
-                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsList'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
-            }
-        }
-        else{
+            this.state.data.demandsId = this.props.navigation.state.params.createDemands.demandsId;
+            await this.commonDidMount();
+            this.showDemandsId();
+            this.showCreationDate();
+            this.showCreatedBy();
+            this.showResponsibleOperator();
+            this.showTotalService();
+            this.showEndDate();
+            this.showFinishingUser();
+            this.showDescription();
+
             this.setState({
                 isLoading: false
-            })
+            });
         }
     }
 }
@@ -1725,7 +2136,7 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#ddd'
     }
-  })
+})
 
 export default createMaterialTopTabNavigator({
     DemandsDetail:{ 

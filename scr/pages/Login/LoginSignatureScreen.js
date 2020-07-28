@@ -170,7 +170,8 @@ const styles = StyleSheet.create({
     },
     logo: {
         width: width, 
-        height: 100
+        height: 80,
+        resizeMode: 'contain'
     },  
     bottom: {
         flex: 5,

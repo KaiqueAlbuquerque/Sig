@@ -28,4 +28,20 @@ export default class CrudService {
             return error.response;
         }
     }
+
+    async postWithFile(url, obj, token = "") {
+        try{
+            let res = await axios.post(`http://sistemasig.duckdns.org:4999/sig/api/${url}`, 
+                                    obj, {
+                                    headers: {
+                                        'Content-Type': 'multipart/form-data',
+                                        Authorization: `Bearer ${token}`
+                                    }
+                                });
+            return res;
+        }
+        catch(error){
+            return error.response;
+        }
+    }
 }
