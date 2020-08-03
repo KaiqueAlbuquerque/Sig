@@ -1581,8 +1581,10 @@ export class DemandsDetailScreen extends Component{
         if(this.state.data.demandsId != undefined){
             
             let getDemands = await crudService.get(`demands/${this.state.data.demandsId}`, this.state.data.userData.token);
-            
+
             if(getDemands.status == 200){
+                this.props.navigation.state.params.createDemands.getDemands = getDemands.data;
+
                 this.changeClient(getDemands.data.clientId);
                 this.changeArea(getDemands.data.areaId);
     

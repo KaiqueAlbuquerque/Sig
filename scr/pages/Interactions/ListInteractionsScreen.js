@@ -1,7 +1,16 @@
-import React, { useEffect, useState, PureComponent } from 'react';
+import React, { useEffect, useState, PureComponent, useRef } from 'react';
 
-import { View, ActivityIndicator, FlatList, StyleSheet, Alert, TouchableWithoutFeedback } from 'react-native';
-import { Card, Header, Text, Icon, Avatar } from 'react-native-elements';
+import { View, 
+         ActivityIndicator, 
+         FlatList, 
+         StyleSheet, 
+         Alert, 
+         TouchableWithoutFeedback, 
+         TouchableOpacity,
+         Picker,
+         TextInput,
+         ScrollView } from 'react-native';
+import { Card, Header, Text, Icon, Avatar, CheckBox } from 'react-native-elements';
 
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
@@ -9,6 +18,8 @@ import COLORS from '../../styles/Colors.js';
 
 import CrudService from '../../services/Crud/CrudService.js';
 import moment from 'moment';
+
+import RBSheet from "react-native-raw-bottom-sheet";
 
 class MyListItem extends PureComponent {
 	render() {
@@ -70,6 +81,9 @@ class MyListItem extends PureComponent {
 
 export default function ListInteractionsScreen(props){
     
+    const refRBSheet = useRef();
+    const refRBSheetAttachments = useRef();
+
     let crudService = new CrudService();
     const [listInteractions, setListInteractions] = useState(
         {
@@ -80,11 +94,38 @@ export default function ListInteractionsScreen(props){
     );
 
     const [interaction, setInteraction] = useState("");
-
+    const [typeService, setTypeService] = useState(0);
+    const [listContacts, setListContacts] = useState(
+        {
+            array: [],
+            selected: 0,
+            arrayCombo: [
+                <Picker.Item key={0} value={0} label={`SELECIONE O CONTATO`} />
+            ]
+        }
+    )
+    const [listOperators, setListOperators] = useState(
+        {
+            array: [],
+            selected: 0,
+            arrayCombo: [
+                <Picker.Item key={0} value={0} label={`SELECIONE O OPERADOR`} />
+            ]
+        }
+    )
+    const [listStatus, setListStatus] = useState(
+        {
+            selected: 50,
+            arrayCombo: [
+                <Picker.Item key={50} value={50} label={`EM ATENDIMENTO`} />
+            ]
+        }
+    )
+    const [hours, setHours] = useState(0);
+    const [minutes, setMinutes] = useState(0);
     const [refreshing, setRefreshing] = useState(false);
-    
 	const [isLoading, setIsLoading] = useState(false);
-
+	const [sendContact, setSendContact] = useState(true);
     const [onEndReachedCalledDuringMomentum, setOnEndReachedCalledDuringMomentum ] = useState(false);
 
     useEffect(() => {
@@ -214,7 +255,7 @@ export default function ListInteractionsScreen(props){
                         />
                     </TouchableWithoutFeedback>
             )
-        }
+        }        
     }
 
     const saveDemands = async () => {
@@ -320,17 +361,362 @@ export default function ListInteractionsScreen(props){
         }
     }
 
+    const openSendDetails = async () => {
+
+        refRBSheet.current.open();
+
+        if(props.navigation.state.params.createDemands.getDemands.statusId == 50){
+            setListStatus({
+                selected: listStatus.selected,
+                arrayCombo: [
+                    <Picker.Item key={50} value={50} label="EM ATENDIMENTO" />,
+                    <Picker.Item key={10} value={10} label="AGUARDANDO ATENDIMENTO" />,
+                    <Picker.Item key={20} value={20} label="AGUARDANDO RETORNO CLIENTE" />
+                ]
+            })
+        }
+
+        let getComboContact = await crudService.get(`comboDemands/getComboContact/${props.navigation.state.params.createDemands.getDemands.clientHelpDeskId}`, props.navigation.state.params.userData.token);
+        if(getComboContact.status == 200){
+            setListContacts({
+                array: [...getComboContact.data],
+                selected: props.navigation.state.params.createDemands.getDemands.contactId,
+                arrayCombo: [
+                    <Picker.Item key={0} value={0} label={`SELECIONE O CONTATO`} />,
+                    getComboContact.data.map((c, i) => {
+                        return <Picker.Item key={i} value={c.contactId} label={c.contactName} />
+                    })
+                ]
+            })
+        }
+        else if(getComboContact.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(getComboContact.status == 400){
+            Alert.alert(
+                "Erro",
+                getComboContact.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        let getComboOperators = await crudService.get(`comboDemands/getComboOperators/${props.navigation.state.params.createDemands.getDemands.areaId}`, props.navigation.state.params.userData.token);
+        if(getComboOperators.status == 200){
+            setListOperators({
+                array: [...getComboOperators.data],
+                selected: props.navigation.state.params.createDemands.getDemands.responsibleOperatorId != null ? props.navigation.state.params.createDemands.getDemands.responsibleOperatorId : 0,
+                arrayCombo: [
+                    <Picker.Item key={0} value={0} label={`SELECIONE O OPERADOR`} />,
+                    getComboOperators.data.map((o, i) => {
+                        return <Picker.Item key={i} value={o.operatorId} label={o.operatorName} />
+                    })
+                ]
+            })
+        }
+        else if(getComboOperators.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(getComboOperators.status == 400){
+            Alert.alert(
+                "Erro",
+                getComboOperators.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    }
+
     const showSendButton = () => {
         
         if(props.navigation.state.params.demandsId != undefined || props.navigation.state.params.createDemands.demandsId != undefined){
             return (
-                    <View style={{flex:2, justifyContent: 'center', alignItems: 'center'}}>
+                    <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
                         <Icon
                             name='send'
                             color='#000'
-                            onPress={() => console.log("aqui")} />
+                            onPress={() => openSendDetails()} />
                     </View>
             )
+        }
+    }
+
+    const showAttachmentButton = () => {
+        
+        if(props.navigation.state.params.demandsId != undefined || props.navigation.state.params.createDemands.demandsId != undefined){
+            return (
+                <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
+                    <Icon
+                        name='attachment'
+                        color='#000'
+                        onPress={() => openPicker()} />
+                </View>
+            )
+        }
+    }
+
+    const openPicker = () => {
+        
+    }
+
+    const backPress = () => {
+        getInteractions();
+        refRBSheet.current.close();
+        setTypeService(0);
+        setSendContact(true);
+        setHours(0);
+        setMinutes(0);
+        setListStatus({
+            selected: 50,
+            arrayCombo: [
+                <Picker.Item key={50} value={50} label={`EM ATENDIMENTO`} />
+            ]
+        });
+    }
+
+    const saveInteraction = async () => {
+
+        let demandsId = props.navigation.state.params.demandsId != undefined ? props.navigation.state.params.demandsId : props.navigation.state.params.createDemands.demandsId;
+
+        refRBSheet.current.close();
+        setIsLoading(true);
+
+        let hoursValidate = hours == "" ? 0 : hours.trim().replace(",",".");
+        let minutesValidate = minutes == "" ? 0 : minutes.trim().replace(",",".");
+        
+        if(hoursValidate < 0){
+            setIsLoading(false);
+
+            Alert.alert(
+                "Erro",
+                "Hora não pode ser um valor menor que 0.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => refRBSheet.current.open(),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(minutesValidate < 0 || minutesValidate > 59){
+            setIsLoading(false);
+
+            Alert.alert(
+                "Erro",
+                "Minuto não pode ser um valor menor que 0 ou maior do que 59.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => refRBSheet.current.open(),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(!((hoursValidate % 1) === 0)) {
+            setIsLoading(false);
+
+            Alert.alert(
+                "Erro",
+                "Hora inválida.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => refRBSheet.current.open(),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(!((minutesValidate % 1) === 0)) {
+            setIsLoading(false);
+
+            Alert.alert(
+                "Erro",
+                "Minuto inválido.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => refRBSheet.current.open(),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{            
+            let createInteraction = {
+                demandsId: demandsId,
+                signatureId: props.navigation.state.params.userData.userData.signatureId,
+                userHelpDeskId: props.navigation.state.params.userData.userData.userHelpDeskId,
+                userType: props.navigation.state.params.userData.userData.userType,
+                private: false,
+                comment: interaction,
+                serviceType: typeService,
+                attendanceTime: `${hoursValidate}:${minutesValidate}`,
+                showDescription: true,
+                sendEmail: sendContact,
+                status: listStatus.selected,
+                contactId: listContacts.selected,
+                operatorId: listOperators.selected
+            };
+    
+            var data = new FormData();
+            data.append('Request', JSON.stringify(createInteraction));
+    
+            if(props.navigation.state.params.createDemands.filesSend != undefined){
+                props.navigation.state.params.createDemands.filesSend.forEach((file) => {
+                    data.append('Files', file);
+                });
+            }
+    
+            let crudService = new CrudService();
+    
+            let result = await crudService.postWithFile(`interactions`, data, props.navigation.state.params.userData.token);
+            
+            if(result.status == 200){            
+                setInteraction("");
+                setTypeService(0);
+                setSendContact(true);
+                setHours(0);
+                setMinutes(0);
+                setListStatus({
+                    selected: 50,
+                    arrayCombo: [
+                        <Picker.Item key={50} value={50} label={`EM ATENDIMENTO`} />
+                    ]
+                });
+                getInteractions();
+                setRefreshing(false);
+                setIsLoading(false);
+    
+                Alert.alert(
+                    "Cadastrado com Sucesso.",
+                    `Interação criada com sucesso.`,
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('DemandsDetail', {userData: props.navigation.state.params.userData, demandsId: result.data.demandsId, createDemands: {}}),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(result.status == 401){
+                setIsLoading(false);
+    
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('LoginEmail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(result.status == 400){
+                setIsLoading(false);
+    
+                Alert.alert(
+                    "Erro",
+                    result.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => refRBSheet.current.open(),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                setIsLoading(false);
+    
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
         }
     }
 
@@ -380,14 +766,207 @@ export default function ListInteractionsScreen(props){
                             <View style={{flex:10, paddingLeft:10, justifyContent: 'center'}}>
                                 <AutoGrowingTextInput placeholder={'Digite sua Interação'} value={interaction} onChangeText={value => changeComment(value)} />                
                             </View>
+                            { showAttachmentButton() }
                             { showSendButton() }
                         </View>
+                        <RBSheet
+                            ref={refRBSheet}
+                            closeOnDragDown={false}
+                            closeOnPressMask={false}
+                            animationType={"slide"}
+                            closeDuration={0}
+                            customStyles={{
+                                wrapper: {
+                                    backgroundColor: "rgba(0,0,0,0.5)"
+                                },
+                                container: {
+                                    height: "100%",
+                                    borderTopLeftRadius: 20,
+                                    borderTopRightRadius: 20,
+                                    paddingLeft: 25
+                                },
+                                draggableIcon: {
+                                    backgroundColor: "#000"
+                                }
+                            }}
+                        >
+                            <ScrollView>
+                                <View style={{paddingRight: 25}}>
+                                    <Text h4 style={{marginBottom:10, marginTop:15, textAlign: 'center'}}>Atendimento</Text>
+                                    
+                                    <Text style={{marginBottom:10}}>Status:</Text>
+                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                        <Picker
+                                            style={pickerStyle}
+                                            selectedValue={listStatus.selected}
+                                            onValueChange={(itemValue, itemIndex) =>
+                                                setListStatus({
+                                                    selected: itemValue,
+                                                    arrayCombo: [...listStatus.arrayCombo]
+                                                })
+                                            }>
+                                            {listStatus.arrayCombo}
+                                        </Picker>
+                                    </View>
+
+                                    <Text style={{marginBottom:10}}>Tipo de Atendimento:</Text>
+                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                        <Picker
+                                            style={pickerStyle}
+                                            selectedValue={typeService}
+                                            onValueChange={(itemValue, itemIndex) =>
+                                                setTypeService(itemValue)
+                                            }>
+                                            <Picker.Item key={0} value={0} label="SELECIONE" />
+                                            <Picker.Item key={10} value={10} label="ACESSO REMOTO" />
+                                            <Picker.Item key={20} value={20} label="EMAIL" />
+                                            <Picker.Item key={30} value={30} label="HELPDESK" />
+                                            <Picker.Item key={40} value={40} label="WHATSAPP" />
+                                            <Picker.Item key={50} value={50} label="SMS" />
+                                            <Picker.Item key={60} value={60} label="TELEFONE" />
+                                            <Picker.Item key={70} value={70} label="VISITA" />
+                                        </Picker>
+                                    </View>
+
+                                    <Text style={{marginBottom:10}}>Tempo Gasto:</Text>
+                                    <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                                        <Text style={{marginBottom:5}}>Horas:</Text>
+                                        <Text style={{marginBottom:5}}>Minutos:</Text>
+                                    </View>
+                                    <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                            <TextInput 
+                                                keyboardType='numeric' 
+                                                onChangeText = {(e)=> setHours(e)}
+                                                value = {String (hours)}
+                                                style={styles.input} />
+                                        </View>
+                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                            <TextInput 
+                                                keyboardType='numeric' 
+                                                onChangeText = {(e)=> setMinutes(e)}
+                                                value = {String (minutes)}
+                                                style={styles.input} />
+                                        </View>
+                                    </View>
+
+                                    <Text style={{marginBottom:10}}>Encaminhar para Contato:</Text>
+                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                        <Picker
+                                            style={pickerStyle}
+                                            selectedValue={listContacts.selected}
+                                            onValueChange={(itemValue, itemIndex) =>
+                                                setListContacts({
+                                                    array: [...listContacts.array],
+                                                    selected: itemValue,
+                                                    arrayCombo: [...listContacts.arrayCombo]
+                                                })
+                                            }>
+                                            {listContacts.arrayCombo}
+                                        </Picker>
+                                    </View>
+
+                                    <Text style={{marginBottom:10}}>Encaminhar para Operador:</Text>
+                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                        <Picker
+                                            style={pickerStyle}
+                                            selectedValue={listOperators.selected}
+                                            onValueChange={(itemValue, itemIndex) =>
+                                                setListOperators({
+                                                    array: [...listOperators.array],
+                                                    selected: itemValue,
+                                                    arrayCombo: [...listOperators.arrayCombo]
+                                                })
+                                            }>
+                                            {listOperators.arrayCombo}
+                                        </Picker>
+                                    </View>
+
+                                    <CheckBox
+                                        center
+                                        title='Enviar email p/ contato'
+                                        checked={sendContact}
+                                        onPress={() => setSendContact(!sendContact)}
+                                    />
+
+                                    <View style={{flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10}}>
+                                        <TouchableOpacity
+                                            style={styles.backButton}
+                                            activeOpacity = { .5 }
+                                            onPress={() => backPress()}
+                                        >
+                                            <Text style={styles.backText}>Voltar</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.nextButton}
+                                            activeOpacity = { .5 }
+                                            onPress={() => saveInteraction()}
+                                        >
+                                            <Text style={styles.nextText}>Confirmar</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </ScrollView>
+                        </RBSheet>
+
+                        <RBSheet
+                            ref={refRBSheetAttachments}
+                            closeOnDragDown={true}
+                            closeOnPressMask={false}
+                            animationType={"slide"}
+                            closeDuration={0}
+                            customStyles={{
+                                wrapper: {
+                                    backgroundColor: "rgba(0,0,0,0.5)"
+                                },
+                                container: {
+                                    height: "30%",
+                                    borderTopLeftRadius: 20,
+                                    borderTopRightRadius: 20,
+                                    paddingLeft: 25
+                                },
+                                draggableIcon: {
+                                    backgroundColor: "#000"
+                                }
+                            }}
+                        >
+                            
+                        </RBSheet>
                     </React.Fragment> 
                 )
             }
         </View>
     );
 }
+
+const pickerStyle = {
+	inputIOS: {
+		color: 'white',
+		paddingTop: 13,
+		paddingHorizontal: 10,
+		paddingBottom: 12,
+	},
+	inputAndroid: {
+		color: 'white',
+    },
+    fontSize: 30,
+	placeholderColor: 'white',
+	underline: { borderTopWidth: 0 },
+	icon: {
+		position: 'absolute',
+		backgroundColor: 'transparent',
+		borderTopWidth: 5,
+		borderTopColor: '#00000099',
+		borderRightWidth: 5,
+		borderRightColor: 'transparent',
+		borderLeftWidth: 5,
+		borderLeftColor: 'transparent',
+		width: 0,
+		height: 0,
+		top: 20,
+		right: 15,
+	},
+};
 
 const styles = StyleSheet.create({
     textAreaContainer: {
@@ -409,5 +988,39 @@ const styles = StyleSheet.create({
     containerLoader: {
         flex: 1,
         justifyContent: "center"
+    },	
+    input: {
+        borderBottomWidth: 1,
+        borderBottomColor: '#ddd',
+        width: 70,
+        textAlign: 'center'
     },
+    nextButton: {
+        marginTop:10,
+        paddingTop:15,
+        paddingBottom:15,
+        backgroundColor:COLORS.default,
+        borderRadius:10,
+        borderWidth: 1,
+        borderColor: '#fff',
+        width: 150
+    },    
+    nextText:{
+        color:'#fff',
+        textAlign:'center',
+    },
+    backButton: {
+        marginTop:10,
+        paddingTop:15,
+        paddingBottom:15,
+        backgroundColor:'#fff',
+        borderRadius:10,
+        borderWidth: 1,
+        borderColor: '#000',
+        width: 150
+    },
+    backText: {
+        color: '#000',
+        textAlign:'center'
+    }   
 })
