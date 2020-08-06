@@ -15,11 +15,14 @@ import { Card, Header, Text, Icon, Avatar, CheckBox } from 'react-native-element
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
 import COLORS from '../../styles/Colors.js';
+import CardFiles from '../Components/CardFiles.js';
 
 import CrudService from '../../services/Crud/CrudService.js';
 import moment from 'moment';
 
 import RBSheet from "react-native-raw-bottom-sheet";
+import ImagePicker from 'react-native-image-picker';
+import DocumentPicker from 'react-native-document-picker';
 
 class MyListItem extends PureComponent {
 	render() {
@@ -126,11 +129,13 @@ export default function ListInteractionsScreen(props){
     const [refreshing, setRefreshing] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [sendContact, setSendContact] = useState(true);
+    const [filesSendInteraction, setFilesSendInteraction] = useState([]);
+    const [attachmentsList, setAttachmentsList] = useState([]);
     const [onEndReachedCalledDuringMomentum, setOnEndReachedCalledDuringMomentum ] = useState(false);
 
     useEffect(() => {
-		
-		async function getInteractionsInitial(){
+
+        async function getInteractionsInitial(){
             await getInteractions();
             setRefreshing(false);
             console.log(props.navigation.state.params)
@@ -144,8 +149,9 @@ export default function ListInteractionsScreen(props){
             setInteraction("");
         });
 
-		getInteractionsInitial();
-	}, [refreshing]);
+        getInteractionsInitial();
+        insertFileGallery();
+	}, [refreshing, filesSendInteraction]);
 
 	const getInteractions = async () => {
         
@@ -284,6 +290,7 @@ export default function ListInteractionsScreen(props){
         
         if(result.status == 200){            
             props.navigation.state.params.createDemands.demandsId = result.data.demandsId;
+            props.navigation.state.params.createDemands.getDemands = result.data;
 
             setInteraction("");
             getInteractions();
@@ -519,6 +526,190 @@ export default function ListInteractionsScreen(props){
 
     const openPicker = () => {
         
+        ImagePicker.showImagePicker({
+            title: 'Anexos',
+            customButtons: [
+                {name: 'photo', title: 'Tirar foto...'},
+                {name: 'video', title: 'Gravar vídeo...'},
+                {name: 'files', title: 'Enviar arquivos...'},
+            ],
+            chooseFromLibraryButtonTitle: null,
+            takePhotoButtonTitle: null,
+            cancelButtonTitle: "CANCELAR"
+        }, async (datas) => {
+            if(datas.customButton == 'photo'){
+                ImagePicker.launchCamera({mediaType: 'photo'}, (response) => {
+                    
+                })
+            }
+            else if(datas.customButton == 'video'){
+                ImagePicker.launchCamera({mediaType: 'video'}, (response) => {
+                    if((response.didCancel == undefined) || (response.didCancel != undefined && !response.didCancel)){
+                        let arrayPath = response.path.split("/");
+
+                        let file = {
+                            uri: response.uri,
+                            name: arrayPath[arrayPath.length-1],
+                            type: "video/mp4"
+                        };
+                        
+                        setFilesSendInteraction([...filesSendInteraction, file]);
+                    }
+                })
+            }
+            else if(datas.customButton == 'files'){
+                try {
+                    let arrayFiles = [];
+                    const results = await DocumentPicker.pickMultiple({
+                        type: [DocumentPicker.types.allFiles],
+                    });
+                    for (const res of results) {
+                        let file = {
+                            uri: res.uri,
+                            name: res.name,
+                            type: res.type
+                        };
+                        arrayFiles.push(file);
+                    }
+                    
+                    setFilesSendInteraction([...filesSendInteraction, ...arrayFiles]);
+                } 
+                catch (err) {
+                    if (DocumentPicker.isCancel(err)) {
+                        // User cancelled the picker, exit any dialogs or menus and move on
+                    } 
+                    else {
+                        throw err;
+                    }
+                }
+            }
+            else{
+                if((datas.didCancel == undefined) || (datas.didCancel != undefined && !datas.didCancel)){
+                    let file = {
+                        uri: datas.uri,
+                        name: datas.fileName,
+                        type: datas.type
+                    };
+                    
+                    setFilesSendInteraction([...filesSendInteraction, file]);
+                }
+            }
+        });
+    }
+
+    const showQtdAttachment = () => {
+        if(filesSendInteraction.length > 0){
+            return (
+                <TouchableWithoutFeedback onPress={() => refRBSheetAttachments.current.open()}>
+                    <View style={{marginLeft: 10}}>
+                        <Text>{filesSendInteraction.length} {filesSendInteraction.length == 1 ? "Anexo" : "Anexos"}</Text>
+                    </View>
+                </TouchableWithoutFeedback>
+            )
+        }
+    }
+
+    const insertFileGallery = () => {
+        
+        if(filesSendInteraction.length >= 0){
+            
+            let listAttachments = filesSendInteraction.map((attachment, index) => {
+                
+                attachment.index = index;
+
+                let number = 20;
+                if(index == 0){
+                    number = 0
+                }
+
+                let arrayName = attachment.name.split('.');
+                let iconName = arrayName[arrayName.length-1];
+                iconName = iconName.toLowerCase();
+                let path = '';
+
+                if(iconName == "csv"){
+                    path = require("../../assets/img/icons/csv.png");
+                }
+                else if(iconName == "doc" || iconName == "docx"){
+                    path = require("../../assets/img/icons/doc.png");
+                }
+                else if(iconName == "exe"){
+                    path = require("../../assets/img/icons/exe.png");
+                }
+                else if(iconName == "jpg" || iconName == "jpeg"){
+                    path = require("../../assets/img/icons/jpg.png");
+                }
+                else if(iconName == "mp3"){
+                    path = require("../../assets/img/icons/mp3.png");
+                }
+                else if(iconName == "iso" ){
+                    path = require("../../assets/img/icons/iso.png");
+                }
+                else if(iconName == "mp4"){
+                    path = require("../../assets/img/icons/mp4.png");
+                }
+                else if(iconName == "pdf"){
+                    path = require("../../assets/img/icons/pdf.png");
+                }
+                else if(iconName == "png"){
+                    path = require("../../assets/img/icons/png.png");
+                }
+                else if(iconName == "ppt" || iconName == "pptx"){
+                    path = require("../../assets/img/icons/ppt.png");
+                }
+                else if(iconName == "txt"){
+                    path = require("../../assets/img/icons/txt.png");
+                }
+                else if(iconName == "xls" || iconName == "xlsx"){
+                    path = require("../../assets/img/icons/xls.png");
+                }
+                else if(iconName == "xml"){
+                    path = require("../../assets/img/icons/xml.png");
+                }
+                else if(iconName == "zip" || iconName == "7z"){
+                    path = require("../../assets/img/icons/zip.png");
+                }
+                else{
+                    path = require("../../assets/img/icons/documento.png");
+                }
+
+                return <CardFiles 
+                            imageUri={path}
+                            attachment={attachment}
+                            left={number}
+                            userData={props.navigation.state.params.userData.userData}
+                            navigation={props.navigation}
+                            removeAttachment={removeAttachment}
+                        />
+            });
+
+            if(filesSendInteraction.length > 0){
+                let component = <View style={{ height: 130, marginTop: 10 }}>
+                                    <ScrollView
+                                        horizontal={true}
+                                        showsHorizontalScrollIndicator={false}
+                                    >
+                                        {listAttachments}
+                                    </ScrollView>
+                                </View>
+
+                setAttachmentsList(component);
+            }
+            else{
+                setAttachmentsList([]);
+            }
+        }
+    }
+
+    const removeAttachment = (index) => {
+        
+        setFilesSendInteraction(
+            filesSendInteraction.filter((attachment) => {
+                if(attachment.index != index){
+                    return attachment;
+                };
+            })
+        )
     }
 
     const backPress = () => {
@@ -630,18 +821,18 @@ export default function ListInteractionsScreen(props){
             var data = new FormData();
             data.append('Request', JSON.stringify(createInteraction));
     
-            if(props.navigation.state.params.createDemands.filesSend != undefined){
-                props.navigation.state.params.createDemands.filesSend.forEach((file) => {
-                    data.append('Files', file);
-                });
-            }
-    
+            filesSendInteraction.forEach((file) => {
+                data.append('Files', file);
+            });
+            
             let crudService = new CrudService();
     
             let result = await crudService.postWithFile(`interactions`, data, props.navigation.state.params.userData.token);
             
-            if(result.status == 200){            
+            if(result.status == 200){  
+                
                 setInteraction("");
+                setFilesSendInteraction([]);
                 setTypeService(0);
                 setSendContact(true);
                 setHours(0);
@@ -662,7 +853,7 @@ export default function ListInteractionsScreen(props){
                     [
                         {
                             text: "Ok",
-                            onPress: () => props.navigation.navigate('DemandsDetail', {userData: props.navigation.state.params.userData, demandsId: result.data.demandsId, createDemands: {}}),
+                            onPress: () => props.navigation.navigate('DemandsDetail', {userData: props.navigation.state.params.userData, createDemands: {}, demandsId: demandsId}),
                             style: "ok"
                         }
                     ],
@@ -762,7 +953,8 @@ export default function ListInteractionsScreen(props){
                                 ListFooterComponent={ renderFooter }
                             />
                         </View>
-                        <View style={{flex:1, flexDirection: 'row', marginLeft: 10, marginRight: 10, marginBottom: 10, backgroundColor: "#efefef", borderRadius:20}}>
+                        { showQtdAttachment() }
+                        <View style={{flexDirection: 'row', marginLeft: 10, marginRight: 10, marginBottom: 10, backgroundColor: "#efefef", borderRadius:20}}>
                             <View style={{flex:10, paddingLeft:10, justifyContent: 'center'}}>
                                 <AutoGrowingTextInput placeholder={'Digite sua Interação'} value={interaction} onChangeText={value => changeComment(value)} />                
                             </View>
@@ -911,8 +1103,8 @@ export default function ListInteractionsScreen(props){
 
                         <RBSheet
                             ref={refRBSheetAttachments}
-                            closeOnDragDown={true}
-                            closeOnPressMask={false}
+                            closeOnDragDown={false}
+                            closeOnPressMask={true}
                             animationType={"slide"}
                             closeDuration={0}
                             customStyles={{
@@ -920,17 +1112,19 @@ export default function ListInteractionsScreen(props){
                                     backgroundColor: "rgba(0,0,0,0.5)"
                                 },
                                 container: {
-                                    height: "30%",
+                                    height: "35%",
                                     borderTopLeftRadius: 20,
                                     borderTopRightRadius: 20,
-                                    paddingLeft: 25
+                                    paddingLeft: 25,
+                                    paddingRight: 25
                                 },
                                 draggableIcon: {
                                     backgroundColor: "#000"
                                 }
                             }}
                         >
-                            
+                            <Text h4 style={{marginBottom:10, marginTop:15, textAlign: 'center'}}>Anexos</Text>
+                            {attachmentsList}
                         </RBSheet>
                     </React.Fragment> 
                 )

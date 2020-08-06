@@ -5,45 +5,82 @@ import {
     StyleSheet,
     Image,
     TouchableOpacity,
-    Alert
-} from "react-native";
+    Alert,
+    PermissionsAndroid
+    } from "react-native";
 
-import Icon from 'react-native-vector-icons/FontAwesome';
+    import Icon from 'react-native-vector-icons/FontAwesome';
 
-import CrudService from '../../services/Crud/CrudService.js';
+    import CrudService from '../../services/Crud/CrudService.js';
 
-import RNFetchBlob from 'rn-fetch-blob';
+    import RNFetchBlob from 'rn-fetch-blob';
 
-export default class CardFiles extends Component {
-    
+    export default class CardFiles extends Component {
+
     downloadFile = async (id, userData, fileName, navigation) => {
-        
-        let crudService = new CrudService();
-        let result = await crudService.get(`attachments/fileExists/${id}`, userData.token);
-        
-        if(result.status == 200){
-            const { config, fs } = RNFetchBlob
-        
-            let DownloadDir = fs.dirs.DownloadDir 
-            let options = {
-                fileCache: true,
-                addAndroidDownloads : {
-                    useDownloadManager : true, 
-                    notification : true,
-                    path: DownloadDir + "/SIG/" + fileName, 
-                    description : 'Baixando arquivo.'
-                }
+
+        const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            {
+                title: "Permissão para Download",
+                message: "O App precisa de sua permissão para baixar arquivos neste dispositivo."
             }
-            config(options).fetch('GET', `http://sistemasig.duckdns.org:4999/sig/api/attachments?path=${result.data}`, {
-                Authorization : `Bearer ${userData.token}`
-            }).then((res) => {
-                
-            })
-            .catch((error) => {
-                
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            let crudService = new CrudService();
+            let result = await crudService.get(`attachments/fileExists/${id}`, userData.token);
+            
+            if(result.status == 200){
+                const { config, fs } = RNFetchBlob
+            
+                let DownloadDir = fs.dirs.DownloadDir 
+                let options = {
+                    fileCache: true,
+                    addAndroidDownloads : {
+                        useDownloadManager : true, 
+                        notification : true,
+                        path: DownloadDir + "/SIG/" + fileName, 
+                        description : 'Baixando arquivo.'
+                    }
+                }
+                config(options).fetch('GET', `http://sistemasig.duckdns.org:4999/sig/api/attachments?path=${result.data}`, {
+                    Authorization : `Bearer ${userData.token}`
+                }).then((res) => {
+                    
+                })
+                .catch((error) => {
+                    
+                    Alert.alert(
+                        "Erro",
+                        "Ocorreu um erro. " + error,
+                        [
+                            {
+                                text: "Ok",
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                })
+            }
+            else if(result.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => navigation.navigate('LoginEmail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(result.status == 400){
                 Alert.alert(
                     "Erro",
-                    "Ocorreu um erro. " + error,
+                    result.data,
                     [
                         {
                             text: "Ok",
@@ -52,46 +89,25 @@ export default class CardFiles extends Component {
                     ],
                     { cancelable: false }
                 );
-            })
-        }
-        else if(result.status == 401){
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+        } 
+        else {
             Alert.alert(
-                "Sessão Expirada",
-                "Sua sessão expirou. Por favor, realize o login novamente.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => navigation.navigate('LoginEmail'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else if(result.status == 400){
-            Alert.alert(
-                "Erro",
-                result.data,
-                [
-                    {
-                        text: "Ok",
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else{
-            Alert.alert(
-                "Erro",
-                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                [
-                    {
-                        text: "Ok",
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
+                "Permissão Negada!",
+                "O App não possui permissão para fazer downloads neste dispositivo."
             );
         }
     }

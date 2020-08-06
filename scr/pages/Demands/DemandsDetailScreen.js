@@ -999,7 +999,7 @@ export class DemandsDetailScreen extends Component{
         
         if(this.state.filesSend.length >= 0){
             
-            var listAttachments = this.state.filesSend.map((attachment, index) => {
+            let listAttachments = this.state.filesSend.map((attachment, index) => {
                 
                 attachment.index = index;
 
@@ -1111,10 +1111,7 @@ export class DemandsDetailScreen extends Component{
             }
             else if(datas.customButton == 'video'){
                 ImagePicker.launchCamera({mediaType: 'video'}, (response) => {
-                    console.log(response);
-                    console.log("video");
-                    
-                    if(response.didCancel != undefined && !response.didCancel){
+                    if((response.didCancel == undefined) || (response.didCancel != undefined && !response.didCancel)){
                         let arrayPath = response.path.split("/");
 
                         let file = {
@@ -1138,9 +1135,6 @@ export class DemandsDetailScreen extends Component{
                         type: [DocumentPicker.types.allFiles],
                     });
                     for (const res of results) {
-                        console.log(res);
-                        console.log("arquivos");
-                        
                         let file = {
                             uri: res.uri,
                             name: res.name,
@@ -1165,10 +1159,7 @@ export class DemandsDetailScreen extends Component{
                 }
             }
             else{
-                console.log(datas);
-                console.log("else");
-                
-                if(datas.didCancel != undefined && !datas.didCancel){
+                if((datas.didCancel == undefined) || (datas.didCancel != undefined && !datas.didCancel)){
                     let file = {
                         uri: datas.uri,
                         name: datas.fileName,
@@ -1374,7 +1365,7 @@ export class DemandsDetailScreen extends Component{
         this.props.navigation.state.params.createDemands.userHelpDeskId = this.props.navigation.state.params.userData.userData.userHelpDeskId;
         this.props.navigation.state.params.createDemands.userType = this.props.navigation.state.params.userData.userData.userType;
 
-        var data = new FormData();
+        let data = new FormData();
         data.append('Request', JSON.stringify(this.props.navigation.state.params.createDemands));
 
         this.state.filesSend.forEach((file) => {
@@ -1583,6 +1574,7 @@ export class DemandsDetailScreen extends Component{
             let getDemands = await crudService.get(`demands/${this.state.data.demandsId}`, this.state.data.userData.token);
 
             if(getDemands.status == 200){
+                
                 this.props.navigation.state.params.createDemands.getDemands = getDemands.data;
 
                 this.changeClient(getDemands.data.clientId);
@@ -1698,7 +1690,7 @@ export class DemandsDetailScreen extends Component{
         
         if(this.state.dataDemands.listAttachments.length > 0){
             
-            var listAttachments = this.state.dataDemands.listAttachments.map((attachment, index) => {
+            let listAttachments = this.state.dataDemands.listAttachments.map((attachment, index) => {
                 
                 let number = 20;
                 if(index == 0){
@@ -2067,16 +2059,14 @@ export class DemandsDetailScreen extends Component{
     }
     
     async componentDidMount(){
-        await this.commonDidMount();
-    }
-
-    async shouldComponentUpdate(){
-        if(this.props.navigation.state.params.createDemands.demandsId != undefined && !this.state.savedHere){
+        this.props.navigation.addListener('willFocus', async (route) => { 
             this.setState({
                 isLoading: true
             });
-            
-            this.state.data.demandsId = this.props.navigation.state.params.createDemands.demandsId;
+            if(this.props.navigation.state.params.demandsId != undefined)
+            {
+                this.state.data.demandsId = this.props.navigation.state.params.demandsId;
+            }
             await this.commonDidMount();
             this.showDemandsId();
             this.showCreationDate();
@@ -2086,11 +2076,13 @@ export class DemandsDetailScreen extends Component{
             this.showEndDate();
             this.showFinishingUser();
             this.showDescription();
-
+            
             this.setState({
                 isLoading: false
             });
-        }
+        });
+
+        await this.commonDidMount();
     }
 }
 
