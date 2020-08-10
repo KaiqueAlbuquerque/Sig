@@ -30,10 +30,15 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 class MyListItem extends PureComponent {
 	render() {
+		
+		let label = this.props.data.labels.find((lbl) => {
+			return lbl.typeLabel == 1
+		});
+
 		return (
 			<TouchableOpacity onPress={() => this.props.navigation.navigate('DemandsDetail', {userData: this.props.data, demandsId: this.props.item.ticketId, createDemands: {}})}>
 				<Card containerStyle={{ borderRadius: 15 }}>
-					<Text style={styles.textDemands}>Chamado {this.props.item.code}</Text>
+					<Text style={styles.textDemands}>{label.name} {this.props.item.code}</Text>
 					<Text>
 						<Text style={styles.textBold}>Cliente:</Text> {this.props.item.client}
 					</Text>
@@ -190,6 +195,51 @@ export default function DemandsListScreen(props){
 		});
 	}
 
+	const listActionsButtons = () => {
+
+		let actionsButtons = [];
+		actionsButtons.push(
+			<ActionButton.Item
+				buttonColor="#34af23"
+				title="Whatsapp"
+				onPress={ openWhatsapp }
+			>
+				<Icon name='whatsapp' style={styles.actionButtonIcon} />
+			</ActionButton.Item>
+		)
+
+		data.permissionAndMenu.forEach((menu, index) => {
+			if((data.userData.userType == 1 && menu.menuId == 26) || data.userData.userType == 2){
+
+				let label = data.labels.find((lbl) => {
+					return lbl.typeLabel == 1
+				});
+
+				actionsButtons.push(
+					<ActionButton.Item
+						buttonColor="#fb8c00"
+						title="QrCode"
+						onPress={() => props.navigation.navigate("QrCode")}
+					>
+						<Icon name='qrcode' style={styles.actionButtonIcon} />
+					</ActionButton.Item>
+				);
+
+				actionsButtons.push(
+					<ActionButton.Item
+						buttonColor="#9b59b6"
+						title={`Novo ${label.name}`}
+						onPress={() => props.navigation.navigate("DemandsDetail", {userData: data, createDemands: {}})}
+					>
+						<Icon name='plus' style={styles.actionButtonIcon} />
+					</ActionButton.Item>
+				);
+			}
+		});
+
+		return actionsButtons;
+	}
+
 	data.permissionAndMenu.forEach((menu, index) => {
         if(menu.menuId == 24){
 			havePermission = true;
@@ -203,11 +253,15 @@ export default function DemandsListScreen(props){
 
 	if(havePermission){
 		
+		let label = data.labels.find((lbl) => {
+			return lbl.typeLabel == 1
+		});
+
 		render = <>
 					<Header
 						centerComponent={
 							<Text h4 style={styles.title}>
-								Lista de Chamados
+								Lista de {label.name}
 							</Text>
 						}
 						rightComponent={<TouchableWithoutFeedback onPress={() => refRBSheet.current.open()}>
@@ -233,27 +287,7 @@ export default function DemandsListScreen(props){
 						refreshing={ refreshing }
 					/>
 					<ActionButton buttonColor="rgba(231,76,60,1)" style={styles.actionButton}>
-						<ActionButton.Item
-							buttonColor="#34af23"
-							title="Whatsapp"
-							onPress={ openWhatsapp }
-						>
-							<Icon name='whatsapp' style={styles.actionButtonIcon} />
-						</ActionButton.Item>
-						<ActionButton.Item
-							buttonColor="#fb8c00"
-							title="QrCode"
-							onPress={() => props.navigation.navigate("QrCode")}
-						>
-							<Icon name='qrcode' style={styles.actionButtonIcon} />
-						</ActionButton.Item>
-						<ActionButton.Item
-							buttonColor="#9b59b6"
-							title="Novo Chamado"
-							onPress={() => props.navigation.navigate("DemandsDetail", {userData: data, createDemands: {}})}
-						>
-							<Icon name='plus' style={styles.actionButtonIcon} />
-						</ActionButton.Item>
+						{ listActionsButtons() }
 					</ActionButton>
 					<RBSheet
 						ref={refRBSheet}

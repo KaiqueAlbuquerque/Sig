@@ -29,6 +29,22 @@ export default class CrudService {
         }
     }
 
+    async patch(url, obj, token = "") {
+        try{
+            let res = await axios.patch(`http://sistemasig.duckdns.org:4999/sig/api/${url}`, 
+                                    JSON.stringify(obj), {
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        Authorization: `Bearer ${token}`
+                                    }
+                                });
+            return res;
+        }
+        catch(error){
+            return error.response;
+        }
+    }
+
     async postWithFile(url, obj, token = "") {
         try{
             let res = await axios.post(`http://sistemasig.duckdns.org:4999/sig/api/${url}`, 

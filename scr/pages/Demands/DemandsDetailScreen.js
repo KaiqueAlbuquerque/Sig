@@ -1,6 +1,7 @@
 import React, { Component, PureComponent } from 'react';
 
 import RBSheet from "react-native-raw-bottom-sheet";
+import RBSheet2 from "react-native-raw-bottom-sheet";
 
 import { createMaterialTopTabNavigator } from 'react-navigation';
 
@@ -16,7 +17,9 @@ import { View,
          ActivityIndicator,
          Switch,
          Alert } from 'react-native';
-import { Card, Header, Text, Icon } from 'react-native-elements';
+import { Card, Header, Text, Icon, ListItem } from 'react-native-elements';
+import Icons from "react-native-vector-icons/FontAwesome";
+
 
 import COLORS from '../../styles/Colors.js';
 import CardFiles from '../Components/CardFiles.js';
@@ -133,7 +136,12 @@ export class DemandsDetailScreen extends Component{
             },
             isLoading: true,
             filesSend: [],
-            savedHere: false
+            savedHere: false,
+            productsFilter: {
+                listProductsBackup: [],
+                filterProdut: ""
+            },
+            updateSupportLevel: false
         }
     }
 
@@ -350,6 +358,10 @@ export class DemandsDetailScreen extends Component{
                 listProducts: [],
                 selected: this.state.products.selected
             },
+            productsFilter: {
+                listProductsBackup: [],
+                filterProdut: ""
+            },
             sla: "",
             expectedDateTime: '',
             switch: {
@@ -526,6 +538,10 @@ export class DemandsDetailScreen extends Component{
                         listProducts: resultProducts.data,
                         selectOrChange: this.state.products.selectOrChange,
                         selected: this.state.products.selected
+                    },
+                    productsFilter: {
+                        listProductsBackup: resultProducts.data,
+                        filterProdut: ""
                     }
                 })
             }
@@ -1345,7 +1361,27 @@ export class DemandsDetailScreen extends Component{
 
     showSaveButton = () => {
         
-        if(this.state.data.demandsId == undefined){
+        if(this.state.updateSupportLevel == true){
+            
+            return  <View style={{flexDirection: 'row'}}>
+                        <TouchableWithoutFeedback onPress={() => this.closeUpdateSupportLevel()}>
+                            <Icon
+                                name='close'
+                                color='#fff'
+                            />
+                        </TouchableWithoutFeedback>
+                        
+                        <View style={{marginLeft: 10}}>
+                            <TouchableWithoutFeedback onPress={() => this.saveUpdateSupportLevel()}>
+                                <Icon
+                                    name='save'
+                                    color='#fff'
+                                />
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </View>
+        }
+        else if(this.state.data.demandsId == undefined){
             return <TouchableWithoutFeedback onPress={() => this.saveDemands()}>
                         <Icon
                             name='save'
@@ -1353,6 +1389,360 @@ export class DemandsDetailScreen extends Component{
                         />
                     </TouchableWithoutFeedback>
         }
+        else{
+            return <TouchableWithoutFeedback onPress={() => this.RBSheet2.open()}>
+                        <Icons
+                            name='plus' 
+                            style={{fontSize: 20, color: "white"}}
+                        /> 
+                    </TouchableWithoutFeedback>
+        }
+    }
+
+    saveUpdateSupportLevel = async () => {
+        
+        let data = {
+            demandId: this.state.data.demandsId,
+            supportLevel: this.state.level.levelId
+        }
+
+        let crudService = new CrudService();
+        
+        let result = await crudService.patch(`demands/changeSupportLevel/${this.state.data.demandsId}`, data, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            
+            this.setState({
+                savedHere: true,
+                updateSupportLevel: false,
+            })
+
+            await this.commonDidMount();
+            
+            Alert.alert(
+                "Alterado com Sucesso.",
+                `Nível de suporte alterado com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    }
+
+    closeUpdateSupportLevel = () => {
+        
+        this.setState({
+            updateSupportLevel: false,
+            level: {
+                levelId: this.state.level.levelId,
+                enabled: false
+            },
+        });
+    }
+
+    showListActions = () => {
+
+        let actions = [];
+        
+        this.state.data.userData.permissionAndMenu.forEach((menu, index) => {
+            
+            if((this.state.data.userData.userData.userType == 1 && menu.menuId == 36) || this.state.data.userData.userData.userType == 2){
+                
+                if(this.state.status.statusId != 30 && this.state.status.statusId != 40 && this.state.status.statusId != 60 && this.state.status.statusId != 70){
+            
+                    actions.push(
+                        <ListItem
+                            button onPress={() => console.log("aqui") }
+                            key={1}
+                            title="Finalizar"
+                            leftElement={ 
+                                <Icons
+                                    name='power-off' 
+                                    style={styles.styleIcon}
+                                /> 
+                            }
+                            bottomDivider
+                        />
+                    );
+                }
+            }
+            else if((this.state.data.userData.userData.userType == 1 && menu.menuId == 37) || this.state.data.userData.userData.userType == 2){
+                
+                if(this.state.status.statusId == 60 || this.state.status.statusId == 70){
+                    actions.push(
+                        <ListItem
+                            button onPress={() => this.reopenDemands() }
+                            key={2}
+                            title="Reabrir"
+                            leftElement={ 
+                                <Icons
+                                    name='undo' 
+                                    style={styles.styleIcon}
+                                /> 
+                            }
+                            bottomDivider
+                        />
+                    );
+                }
+            }
+            else if(this.state.data.userData.userData.userType == 1 && menu.menuId == 40){
+
+                if(this.state.status.statusId != 30 && this.state.status.statusId != 40 && this.state.status.statusId != 60 && this.state.status.statusId != 70){
+            
+                    actions.push(
+                        <ListItem
+                            button onPress={() => console.log("aqui") }
+                            key={3}
+                            title="Encaminhar"
+                            leftElement={ 
+                                <Icons
+                                    name='mail-forward' 
+                                    style={styles.styleIcon}
+                                /> 
+                            }
+                            bottomDivider
+                        />
+                    );
+                }
+            }
+            else if(this.state.data.userData.userData.userType == 1 && menu.menuId == 41){
+
+                if(this.state.status.statusId != 30 && this.state.status.statusId != 40 && this.state.status.statusId != 60 && this.state.status.statusId != 70){
+            
+                    actions.push(
+                        <ListItem
+                            button onPress={() => this.changeSupportLevel() }
+                            key={4}
+                            title="Alterar Nível Suporte"
+                            leftElement={ 
+                                <Icons
+                                    name='users' 
+                                    style={styles.styleIcon}
+                                /> 
+                            }
+                            bottomDivider
+                        />
+                    );
+                }
+            }
+            else if(this.state.data.userData.userData.userType == 1 && menu.menuId == 44){
+
+                if(this.state.status.statusId != 30 && this.state.status.statusId != 40 && this.state.status.statusId != 60 && this.state.status.statusId != 70){
+            
+                    actions.push(
+                        <ListItem
+                            button onPress={() => console.log("aqui") }
+                            key={5}
+                            title="Editar"
+                            leftElement={ 
+                                <Icons
+                                    name='edit' 
+                                    style={styles.styleIcon}
+                                /> 
+                            }
+                            bottomDivider
+                        />
+                    );
+                }
+            }
+        });
+
+        return actions;
+    }
+
+    reopenDemands = async () => {
+
+        let label = this.state.data.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+
+        let data = {
+            demandsId: this.state.data.demandsId,
+            userHelpDeskId: this.state.data.userData.userData.userHelpDeskId,
+            status: 10,
+            userType: this.state.data.userData.userData.userType,
+            term: label.name
+        }
+
+        let crudService = new CrudService();
+
+        let result = await crudService.patch(`demands/reopenDemands/${this.state.data.demandsId}`, data, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            
+            this.setState({
+                savedHere: true
+            })
+
+            await this.commonDidMount();
+            this.RBSheet2.close();
+
+            Alert.alert(
+                "Reaberto com Sucesso.",
+                `${label.name} ${result.data.codeId} reaberto com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            this.setState({
+                isLoading: false
+            });
+
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    }
+
+    changeSupportLevel = async () => {
+
+        this.setState({
+            updateSupportLevel: true,
+            level: {
+                levelId: this.state.level.levelId,
+                enabled: true
+            },
+        });
+        
+        this.RBSheet2.close();
+
+        this.downButtonHandler();
+    }
+
+    downButtonHandler = () => {
+
+        const windowHeight = Dimensions.get('window').height;
+
+        this.scrollview_ref.scrollTo({
+            x: 0,
+            y: windowHeight,
+            animated: true,
+        });
+    };
+
+    onChangeFilterText = (text) => {
+
+        this.setState({
+            productsFilter: {
+                listProductsBackup: this.state.productsFilter.listProductsBackup,
+                filterProdut: text
+            },
+            products: {
+                listProducts: this.state.productsFilter.listProductsBackup.filter((product) => {
+                    if(product.internalCode.toUpperCase().includes(text.toUpperCase()) || product.productName.toUpperCase().includes(text.toUpperCase()))
+                        return product;
+                }),
+                selectOrChange: this.state.products.selectOrChange,
+                selected: this.state.products.selected
+            },
+        });         
     }
 
     saveDemands = async () => {
@@ -1364,6 +1754,11 @@ export class DemandsDetailScreen extends Component{
         this.props.navigation.state.params.createDemands.signatureId = this.props.navigation.state.params.userData.userData.signatureId;
         this.props.navigation.state.params.createDemands.userHelpDeskId = this.props.navigation.state.params.userData.userData.userHelpDeskId;
         this.props.navigation.state.params.createDemands.userType = this.props.navigation.state.params.userData.userData.userType;
+        let label = this.state.data.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+        
+        this.props.navigation.state.params.createDemands.term = label.name;
 
         let data = new FormData();
         data.append('Request', JSON.stringify(this.props.navigation.state.params.createDemands));
@@ -1388,7 +1783,7 @@ export class DemandsDetailScreen extends Component{
 
             Alert.alert(
                 "Cadastrado com Sucesso.",
-                `Chamado ${result.data.codeId} criado com sucesso.`,
+                `${label.name} ${result.data.codeId} criado com sucesso.`,
                 [
                     {
                         text: "Ok",
@@ -1633,6 +2028,10 @@ export class DemandsDetailScreen extends Component{
                         listProducts: this.state.products.listProducts,
                         selectOrChange: "Trocar",
                         selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
+                    },
+                    productsFilter: {
+                        listProductsBackup: this.state.products.listProducts,
+                        filterProdut: ""
                     }
                 }, this.afterDidMount);
             }
@@ -1845,7 +2244,10 @@ export class DemandsDetailScreen extends Component{
                                 />
                             </View>
                             <View style={{flex: 1}}>
-                                <ScrollView>
+                                <ScrollView
+                                    ref={ref => {
+                                        this.scrollview_ref = ref;
+                                    }}>
                                     <View style={{flex: 5,alignItems: 'center'}}>
                                         <View style={{lex: 1, width: width * 0.8, marginTop: 15}}>
                                             
@@ -1997,6 +2399,7 @@ export class DemandsDetailScreen extends Component{
                                                 
                                             <Text h4 style={{marginBottom:10, marginTop: 20}}>Equipamento:</Text>
                                             {this.state.products.selected}
+                                            
                                             <View style={{marginTop:10, marginBottom:10}}>
                                                 <TouchableOpacity onPress={() => this.RBSheet.open()}>
                                                     <Text>{this.state.products.selectOrChange} o equipamento</Text>
@@ -2027,7 +2430,7 @@ export class DemandsDetailScreen extends Component{
                                                         backgroundColor: "rgba(0,0,0,0.5)"
                                                     },
                                                     container: {
-                                                        height: "50%",
+                                                        height: "80%",
                                                         borderTopLeftRadius: 20,
                                                         borderTopRightRadius: 20,
                                                         paddingLeft: 25,
@@ -2039,6 +2442,14 @@ export class DemandsDetailScreen extends Component{
                                                 }}
                                             >
                                                 <Text h4 style={{marginBottom:10, textAlign: 'center'}}>Selecione o Equipamento</Text>
+                                                
+                                                <Text style={{marginBottom:5}}>Filtro equipamento:</Text>
+                                                <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                    <TextInput style={styles.input} 
+                                                        value={this.state.productsFilter.filterProdut}
+                                                        onChangeText={text => this.onChangeFilterText(text)}/>
+                                                </View>
+                                                
                                                 <FlatList
                                                     style={{ flex: 1.8, marginBottom: 20 }}
                                                     contentContainerStyle={ styles.list }
@@ -2046,6 +2457,31 @@ export class DemandsDetailScreen extends Component{
                                                     renderItem={ this.renderItem }
                                                     keyExtractor={(item, index) => item.productId.toString()}
                                                 />
+                                            </RBSheet>
+                                            
+                                            <RBSheet
+                                                ref={ref => {
+                                                    this.RBSheet2 = ref;
+                                                }}
+                                                closeOnDragDown={false}
+                                                closeOnPressMask={true}
+                                                animationType={"slide"}
+                                                closeDuration={0}
+                                                customStyles={{
+                                                    wrapper: {
+                                                        backgroundColor: "rgba(0,0,0,0.5)"
+                                                    },
+                                                    container: {
+                                                        height: "30%",
+                                                    },
+                                                    draggableIcon: {
+                                                        backgroundColor: "#000"
+                                                    }
+                                                }}
+                                            >
+                                                <ScrollView>
+                                                    {this.showListActions()}
+                                                </ScrollView>
                                             </RBSheet>
                                         </View>
                                     </View>
@@ -2129,7 +2565,11 @@ const styles = StyleSheet.create({
     input: {
         borderBottomWidth: 1,
         borderBottomColor: '#ddd'
-    }
+    },
+    styleIcon: {
+        fontSize: 25,
+        color: "black"
+    },
 })
 
 export default createMaterialTopTabNavigator({

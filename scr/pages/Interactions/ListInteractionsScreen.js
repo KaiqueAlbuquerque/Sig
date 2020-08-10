@@ -271,6 +271,11 @@ export default function ListInteractionsScreen(props){
         props.navigation.state.params.createDemands.signatureId = props.navigation.state.params.userData.userData.signatureId;
         props.navigation.state.params.createDemands.userHelpDeskId = props.navigation.state.params.userData.userData.userHelpDeskId;
         props.navigation.state.params.createDemands.userType = props.navigation.state.params.userData.userData.userType;
+        let label = props.navigation.state.params.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+
+        props.navigation.state.params.createDemands.term = label.name;
 
         let objSend = {...props.navigation.state.params.createDemands};
         delete objSend.filesSend;
@@ -299,7 +304,7 @@ export default function ListInteractionsScreen(props){
 
             Alert.alert(
                 "Cadastrado com Sucesso.",
-                `Chamado ${result.data.codeId} criado com sucesso.`,
+                `${label.name} ${result.data.codeId} criado com sucesso.`,
                 [
                     {
                         text: "Ok",
@@ -498,29 +503,39 @@ export default function ListInteractionsScreen(props){
 
     const showSendButton = () => {
         
-        if(props.navigation.state.params.demandsId != undefined || props.navigation.state.params.createDemands.demandsId != undefined){
-            return (
+        if(props.navigation.state.params.createDemands.getDemands != undefined){
+
+            let status = props.navigation.state.params.createDemands.getDemands.statusId;
+
+            if(status != 30 && status != 40 && status != 60 && status != 70){
+                return (
                     <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
                         <Icon
                             name='send'
                             color='#000'
                             onPress={() => openSendDetails()} />
                     </View>
-            )
+                )
+            }
         }
     }
 
     const showAttachmentButton = () => {
         
-        if(props.navigation.state.params.demandsId != undefined || props.navigation.state.params.createDemands.demandsId != undefined){
-            return (
-                <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
-                    <Icon
-                        name='attachment'
-                        color='#000'
-                        onPress={() => openPicker()} />
-                </View>
-            )
+        if(props.navigation.state.params.createDemands.getDemands != undefined){
+
+            let status = props.navigation.state.params.createDemands.getDemands.statusId;
+
+            if(status != 30 && status != 40 && status != 60 && status != 70){
+                return (
+                    <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
+                        <Icon
+                            name='attachment'
+                            color='#000'
+                            onPress={() => openPicker()} />
+                    </View>
+                )
+            }
         }
     }
 
@@ -801,7 +816,11 @@ export default function ListInteractionsScreen(props){
                 { cancelable: false }
             );
         }
-        else{            
+        else{
+            let label = props.navigation.state.params.userData.labels.find((lbl) => {
+                return lbl.typeLabel == 1
+            });
+    
             let createInteraction = {
                 demandsId: demandsId,
                 signatureId: props.navigation.state.params.userData.userData.signatureId,
@@ -815,7 +834,8 @@ export default function ListInteractionsScreen(props){
                 sendEmail: sendContact,
                 status: listStatus.selected,
                 contactId: listContacts.selected,
-                operatorId: listOperators.selected
+                operatorId: listOperators.selected,
+                term: label.name
             };
     
             var data = new FormData();
@@ -954,7 +974,7 @@ export default function ListInteractionsScreen(props){
                             />
                         </View>
                         { showQtdAttachment() }
-                        <View style={{flexDirection: 'row', marginLeft: 10, marginRight: 10, marginBottom: 10, backgroundColor: "#efefef", borderRadius:20}}>
+                        <View style={{flexDirection: 'row', marginLeft: 10, marginRight: 10, marginBottom: 10, backgroundColor: "#efefef", borderRadius:20, maxHeight: 60}}>
                             <View style={{flex:10, paddingLeft:10, justifyContent: 'center'}}>
                                 <AutoGrowingTextInput placeholder={'Digite sua Interação'} value={interaction} onChangeText={value => changeComment(value)} />                
                             </View>
