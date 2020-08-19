@@ -7,15 +7,15 @@ import {
     TouchableOpacity,
     Alert,
     PermissionsAndroid
-    } from "react-native";
+} from "react-native";
 
-    import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
-    import CrudService from '../../services/Crud/CrudService.js';
+import CrudService from '../../services/Crud/CrudService.js';
 
-    import RNFetchBlob from 'rn-fetch-blob';
+import RNFetchBlob from 'rn-fetch-blob';
 
-    export default class CardFiles extends Component {
+export default class CardFiles extends Component {
 
     downloadFile = async (id, userData, fileName, navigation) => {
 

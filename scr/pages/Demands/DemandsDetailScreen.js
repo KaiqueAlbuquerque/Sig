@@ -124,6 +124,8 @@ export class DemandsDetailScreen extends Component{
                 levelId: 0,
                 enabled: true
             },
+            descriptionEditable: false,
+            canShowPicker: false,
             data: this.props.navigation.state.params,
             dataDemands: null,
             attachmentsList: [],
@@ -141,7 +143,9 @@ export class DemandsDetailScreen extends Component{
                 listProductsBackup: [],
                 filterProdut: ""
             },
-            updateSupportLevel: false
+            updateSupportLevel: false,
+            finishDemands: false,
+            editDemands: false
         }
     }
 
@@ -282,7 +286,7 @@ export class DemandsDetailScreen extends Component{
                 ]
             }
         }, () => {
-            if(this.state.dataDemands != null)
+            if(this.state.dataDemands != null && !this.state.canShowPicker)
             {
                 this.changeSubject(this.state.dataDemands.subjectId);
             }
@@ -819,7 +823,7 @@ export class DemandsDetailScreen extends Component{
     changeCategory = async (itemValue) => {
         
         let enable = true;
-        if(this.state.dataDemands != null)
+        if(this.state.dataDemands != null && !this.state.canShowPicker)
             enable = false;
 
         this.setState({
@@ -937,7 +941,7 @@ export class DemandsDetailScreen extends Component{
             else
                 sla = slaReturn.time;
             
-            if(this.state.dataDemands == null){
+            if(this.state.dataDemands == null || this.state.canShowPicker){
                 
                 this.setState({
                     sla: sla,
@@ -1221,7 +1225,7 @@ export class DemandsDetailScreen extends Component{
 
     showPicker = () => {
         
-        if(this.state.dataDemands == null){
+        if(this.state.dataDemands == null || this.state.canShowPicker){
             this.setState({
                 isDatePickerVisible: true
             })
@@ -1349,10 +1353,15 @@ export class DemandsDetailScreen extends Component{
                         <Text style={{marginBottom:5, marginTop: 10}}>Descrição:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 20}}>             
                             <TextInput
-                                editable={false}
+                                editable={this.state.descriptionEditable}
                                 multiline={true}
                                 numberOfLines={3}
-                                onChangeText={(text) => this.setState({text})}
+                                onChangeText={(text) => this.setState(prevState => ({
+                                    dataDemands: {
+                                        ...prevState.dataDemands,
+                                        description: text    
+                                    }
+                                }))}
                                 value={this.state.dataDemands.description}/>
                         </View>
                     </>
@@ -1381,6 +1390,46 @@ export class DemandsDetailScreen extends Component{
                         </View>
                     </View>
         }
+        else if(this.state.finishDemands == true){
+            
+            return  <View style={{flexDirection: 'row'}}>
+                        <TouchableWithoutFeedback onPress={() => this.closeFinishDemands()}>
+                            <Icon
+                                name='close'
+                                color='#fff'
+                            />
+                        </TouchableWithoutFeedback>
+                        
+                        <View style={{marginLeft: 10}}>
+                            <TouchableWithoutFeedback onPress={() => this.clickSaveFinishDemands()}>
+                                <Icon
+                                    name='save'
+                                    color='#fff'
+                                />
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </View>
+        }
+        else if(this.state.editDemands == true){
+            
+            return  <View style={{flexDirection: 'row'}}>
+                        <TouchableWithoutFeedback onPress={() => this.closeEditDemands()}>
+                            <Icon
+                                name='close'
+                                color='#fff'
+                            />
+                        </TouchableWithoutFeedback>
+                        
+                        <View style={{marginLeft: 10}}>
+                            <TouchableWithoutFeedback onPress={() => this.clickSaveEditDemands()}>
+                                <Icon
+                                    name='save'
+                                    color='#fff'
+                                />
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </View>
+        }
         else if(this.state.data.demandsId == undefined){
             return <TouchableWithoutFeedback onPress={() => this.saveDemands()}>
                         <Icon
@@ -1401,6 +1450,10 @@ export class DemandsDetailScreen extends Component{
 
     saveUpdateSupportLevel = async () => {
         
+        this.setState({
+            isLoading: true
+        });
+
         let data = {
             demandId: this.state.data.demandsId,
             supportLevel: this.state.level.levelId
@@ -1432,9 +1485,273 @@ export class DemandsDetailScreen extends Component{
             );
         }
         else if(result.status == 401){
+            
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        this.setState({
+            isLoading: false
+        });
+    }
+
+    saveFinishDemands = () => {
+
+        let label = this.state.data.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+
+        this.RBSheet2.close();
+
+        Alert.alert(
+            `Finalizar ${label.name}`,
+            "Deseja inserir mais alguma interação?",
+            [
+                {
+                    text: "Não Finalizar",
+                    style: "nof"
+                },
+                {
+                    text: "Não",
+                    onPress: () => this.finishWithoutInteraction(),
+                    style: "nok"
+                },
+                {
+                    text: "Sim",
+                    onPress: () => this.finishWithInteraction(),
+                    style: "ok"
+                }
+            ],
+            { cancelable: false }
+        );
+    }
+
+    clickSaveEditDemands = async () => {
+
+        this.setState({
+            isLoading: true
+        });
+
+        let label = this.props.navigation.state.params.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+
+        let clientInList = this.state.client.array.find((cli) => {
+            return cli.clientId == this.state.client.selected;
+        })
+
+        let data = {
+            demandId: this.state.data.demandsId,
+            priorityId: this.state.priority.selected,
+            description: this.state.dataDemands.description,
+            forecast: this.state.expectedDateTime == '' ? null : moment(this.state.expectedDateTime, "DD/MM/YYYY HH:mm").format("YYYY/MM/DD HH:mm"),
+            noExpectedDate: this.state.switch.isEnabled,
+            clientHelpDeskId: clientInList.clientHelpDeskId,
+            contactId: this.state.contact.selected,
+            sectorHelpDeskId: this.state.area.selected,
+            categoryId: this.state.category.selected,
+            problemId: this.state.subject.selected
+        }
+        
+        let crudService = new CrudService();
+        
+        let result = await crudService.patch(`demands/${this.state.data.demandsId}`, data, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            
             this.setState({
-                isLoading: false
-            });
+                isLoading: true,
+                editDemands: false,
+                priority: {
+                    array: this.state.priority.array,
+                    selected: this.state.priority.selected,
+                    enabled: false,
+                    arrayCombo: this.state.priority.arrayCombo
+                },
+                descriptionEditable: false,
+                canShowPicker: false,
+                switch: {
+                    isEnabled: this.state.switch.isEnabled,
+                    disabled: false
+                },
+                client: {
+                    array: this.state.client.array,
+                    selected: this.state.client.selected,
+                    enabled: false,
+                    arrayCombo: this.state.client.arrayCombo
+                },
+                contact: {
+                    array: this.state.contact.array,
+                    selected: this.state.contact.selected,
+                    enabled: false,
+                    arrayCombo: this.state.contact.arrayCombo
+                },
+                area: {
+                    array: this.state.area.array,
+                    selected: this.state.area.selected,
+                    enabled: false,
+                    arrayCombo: this.state.area.arrayCombo
+                },
+                category: {
+                    array: this.state.category.array,
+                    selected: this.state.category.selected,
+                    enabled: false,
+                    arrayCombo: this.state.category.arrayCombo
+                },
+                subject: {
+                    array: this.state.subject.array,
+                    enabled: false,
+                    selected: this.state.subject.selected,
+                    arrayCombo: this.state.subject.arrayCombo
+                }
+            });        
+
+            await this.commonDidMount();
+            
+            Alert.alert(
+                `Alterado com Sucesso.`,
+                `${label.name} alterado com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        this.setState({
+            isLoading: false
+        });
+    }
+
+    finishDemandsFunction = async (interaction) => {
+        
+        this.setState({
+            isLoading: true
+        });
+
+        let label = this.props.navigation.state.params.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+
+        let data = {
+            demandsId: this.state.data.demandsId,
+            userHelpDeskId: this.state.data.userData.userData.userHelpDeskId,
+            userType: this.state.data.userData.userData.userType,
+            interaction: interaction,
+            term: label.name
+        }
+
+        let crudService = new CrudService();
+        
+        let result = await crudService.patch(`demands/finishDemands/${this.state.data.demandsId}`, data, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            
+            this.setState({
+                finishDemands: false
+            });        
+            
+            this.props.navigation.state.params.createDemands.finishDemands = false;
+            await this.commonDidMount();
+            Alert.alert(
+                `Finalizado com Sucesso.`,
+                `${label.name} finalizado com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
 
             Alert.alert(
                 "Sessão Expirada",
@@ -1450,9 +1767,6 @@ export class DemandsDetailScreen extends Component{
             );
         }
         else if(result.status == 400){
-            this.setState({
-                isLoading: false
-            });
 
             Alert.alert(
                 "Erro",
@@ -1467,10 +1781,7 @@ export class DemandsDetailScreen extends Component{
             );
         }
         else{
-            this.setState({
-                isLoading: false
-            });
-
+            
             Alert.alert(
                 "Erro",
                 "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
@@ -1484,9 +1795,27 @@ export class DemandsDetailScreen extends Component{
                 { cancelable: false }
             );
         }
+
+        this.setState({
+            isLoading: false
+        });
     }
 
-    closeUpdateSupportLevel = () => {
+    finishWithoutInteraction = async () => {
+        await this.finishDemandsFunction("");
+    }
+
+    finishWithInteraction = () => {
+
+        this.setState({
+            finishDemands: true
+        });
+        
+        this.props.navigation.state.params.createDemands.finishDemands = true;
+        this.props.navigation.navigate('Interaction');
+    }
+
+    closeUpdateSupportLevel = async () => {
         
         this.setState({
             updateSupportLevel: false,
@@ -1494,12 +1823,144 @@ export class DemandsDetailScreen extends Component{
                 levelId: this.state.level.levelId,
                 enabled: false
             },
+            isLoading: true
         });
+        
+        await this.commonDidMount();
+        
+        this.setState({
+            isLoading: false
+        });
+    }
+
+    closeFinishDemands = () => {
+
+        this.setState({
+            finishDemands: false
+        });        
+        
+        this.props.navigation.state.params.createDemands.finishDemands = false;
+    }
+
+    closeEditDemands = async () => {
+
+        this.setState({
+            isLoading: true,
+            editDemands: false,
+            priority: {
+                array: this.state.priority.array,
+                selected: this.state.priority.selected,
+                enabled: false,
+                arrayCombo: this.state.priority.arrayCombo
+            },
+            descriptionEditable: false,
+            canShowPicker: false,
+            switch: {
+                isEnabled: this.state.switch.isEnabled,
+                disabled: false
+            },
+            client: {
+                array: this.state.client.array,
+                selected: this.state.client.selected,
+                enabled: false,
+                arrayCombo: this.state.client.arrayCombo
+            },
+            contact: {
+                array: this.state.contact.array,
+                selected: this.state.contact.selected,
+                enabled: false,
+                arrayCombo: this.state.contact.arrayCombo
+            },
+            area: {
+                array: this.state.area.array,
+                selected: this.state.area.selected,
+                enabled: false,
+                arrayCombo: this.state.area.arrayCombo
+            },
+            category: {
+                array: this.state.category.array,
+                selected: this.state.category.selected,
+                enabled: false,
+                arrayCombo: this.state.category.arrayCombo
+            },
+            subject: {
+                array: this.state.subject.array,
+                enabled: false,
+                selected: this.state.subject.selected,
+                arrayCombo: this.state.subject.arrayCombo
+            }
+        });
+
+        await this.commonDidMount();
+        
+        this.setState({
+            isLoading: false
+        });
+    }
+
+    clickSaveFinishDemands = async () => {
+
+        await this.finishDemandsFunction(this.props.navigation.state.params.createDemands.description);
+    }
+
+    editDemandsFunction = () => {
+
+        this.RBSheet2.close();
+
+        this.setState({
+            editDemands: true,
+            priority: {
+                array: this.state.priority.array,
+                selected: this.state.priority.selected,
+                enabled: true,
+                arrayCombo: this.state.priority.arrayCombo
+            },
+            descriptionEditable: true,
+            canShowPicker: true,
+            switch: {
+                isEnabled: this.state.switch.isEnabled,
+                disabled: false
+            },
+            client: {
+                array: this.state.client.array,
+                selected: this.state.client.selected,
+                enabled: true,
+                arrayCombo: this.state.client.arrayCombo
+            },
+            contact: {
+                array: this.state.contact.array,
+                selected: this.state.contact.selected,
+                enabled: true,
+                arrayCombo: this.state.contact.arrayCombo
+            },
+            area: {
+                array: this.state.area.array,
+                selected: this.state.area.selected,
+                enabled: true,
+                arrayCombo: this.state.area.arrayCombo
+            },
+            category: {
+                array: this.state.category.array,
+                selected: this.state.category.selected,
+                enabled: true,
+                arrayCombo: this.state.category.arrayCombo
+            },
+            subject: {
+                array: this.state.subject.array,
+                enabled: true,
+                selected: this.state.subject.selected,
+                arrayCombo: this.state.subject.arrayCombo
+            }
+        })
     }
 
     showListActions = () => {
 
         let actions = [];
+
+        let label = this.state.data.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
         
         this.state.data.userData.permissionAndMenu.forEach((menu, index) => {
             
@@ -1509,9 +1970,9 @@ export class DemandsDetailScreen extends Component{
             
                     actions.push(
                         <ListItem
-                            button onPress={() => console.log("aqui") }
+                            button onPress={() => this.saveFinishDemands() }
                             key={1}
-                            title="Finalizar"
+                            title={`Finalizar ${label.name}`}
                             leftElement={ 
                                 <Icons
                                     name='power-off' 
@@ -1530,7 +1991,7 @@ export class DemandsDetailScreen extends Component{
                         <ListItem
                             button onPress={() => this.reopenDemands() }
                             key={2}
-                            title="Reabrir"
+                            title={`Reabrir ${label.name}`}
                             leftElement={ 
                                 <Icons
                                     name='undo' 
@@ -1550,7 +2011,7 @@ export class DemandsDetailScreen extends Component{
                         <ListItem
                             button onPress={() => console.log("aqui") }
                             key={3}
-                            title="Encaminhar"
+                            title={`Encaminhar ${label.name}`}
                             leftElement={ 
                                 <Icons
                                     name='mail-forward' 
@@ -1588,9 +2049,9 @@ export class DemandsDetailScreen extends Component{
             
                     actions.push(
                         <ListItem
-                            button onPress={() => console.log("aqui") }
+                            button onPress={() => this.editDemandsFunction() }
                             key={5}
-                            title="Editar"
+                            title={`Editar ${label.name}`}
                             leftElement={ 
                                 <Icons
                                     name='edit' 
@@ -1608,6 +2069,10 @@ export class DemandsDetailScreen extends Component{
     }
 
     reopenDemands = async () => {
+
+        this.setState({
+            isLoading: true
+        });
 
         let label = this.state.data.userData.labels.find((lbl) => {
             return lbl.typeLabel == 1
@@ -1647,10 +2112,7 @@ export class DemandsDetailScreen extends Component{
             );
         }
         else if(result.status == 401){
-            this.setState({
-                isLoading: false
-            });
-
+            
             Alert.alert(
                 "Sessão Expirada",
                 "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -1665,10 +2127,7 @@ export class DemandsDetailScreen extends Component{
             );
         }
         else if(result.status == 400){
-            this.setState({
-                isLoading: false
-            });
-
+            
             Alert.alert(
                 "Erro",
                 result.data[0],
@@ -1682,10 +2141,7 @@ export class DemandsDetailScreen extends Component{
             );
         }
         else{
-            this.setState({
-                isLoading: false
-            });
-
+            
             Alert.alert(
                 "Erro",
                 "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
@@ -1699,6 +2155,10 @@ export class DemandsDetailScreen extends Component{
                 { cancelable: false }
             );
         }
+
+        this.setState({
+            isLoading: false
+        });
     }
 
     changeSupportLevel = async () => {
@@ -1722,7 +2182,7 @@ export class DemandsDetailScreen extends Component{
 
         this.scrollview_ref.scrollTo({
             x: 0,
-            y: windowHeight,
+            y: windowHeight + 150,
             animated: true,
         });
     };
@@ -1759,7 +2219,7 @@ export class DemandsDetailScreen extends Component{
         });
         
         this.props.navigation.state.params.createDemands.term = label.name;
-
+        
         let data = new FormData();
         data.append('Request', JSON.stringify(this.props.navigation.state.params.createDemands));
 
@@ -2430,7 +2890,7 @@ export class DemandsDetailScreen extends Component{
                                                         backgroundColor: "rgba(0,0,0,0.5)"
                                                     },
                                                     container: {
-                                                        height: "80%",
+                                                        height: "100%",
                                                         borderTopLeftRadius: 20,
                                                         borderTopRightRadius: 20,
                                                         paddingLeft: 25,
@@ -2495,13 +2955,22 @@ export class DemandsDetailScreen extends Component{
     }
     
     async componentDidMount(){
+        
         this.props.navigation.addListener('willFocus', async (route) => { 
+            console.log(this.props.navigation.state.params)
             this.setState({
                 isLoading: true
             });
+            
             if(this.props.navigation.state.params.demandsId != undefined)
             {
                 this.state.data.demandsId = this.props.navigation.state.params.demandsId;
+            }
+            if(this.props.navigation.state.params.createDemands.finishDemands == false)
+            {
+                this.setState({
+                    finishDemands: false
+                });
             }
             await this.commonDidMount();
             this.showDemandsId();

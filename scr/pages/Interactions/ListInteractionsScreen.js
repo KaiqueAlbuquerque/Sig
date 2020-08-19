@@ -9,8 +9,14 @@ import { View,
          TouchableOpacity,
          Picker,
          TextInput,
-         ScrollView } from 'react-native';
+         ScrollView,
+         Vibration,
+         PermissionsAndroid } from 'react-native';
 import { Card, Header, Text, Icon, Avatar, CheckBox } from 'react-native-elements';
+import Icons from "react-native-vector-icons/FontAwesome";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+
+import Modal from 'react-native-modal';
 
 import { AutoGrowingTextInput } from 'react-native-autogrow-textinput';
 
@@ -24,9 +30,146 @@ import RBSheet from "react-native-raw-bottom-sheet";
 import ImagePicker from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
 
+import RNFetchBlob from 'rn-fetch-blob';
+
 class MyListItem extends PureComponent {
-	render() {
+    
+    constructor(props){
+        super(props);
+
+        this.state = {
+            color: "#fff"
+        }
+    }
+
+    attachmentsInteraction = () => {
+
+        let arrayAttachments = []
+        this.props.interaction.listAttachments.forEach(attachment => {
+            arrayAttachments.push(<Text onPress={() => this.downloadFile(attachment.attachmentId, this.props.userData, attachment.fileName, this.props.navigation)} style={{textDecorationLine:'underline', color: 'blue'}}>{attachment.fileName}</Text>);
+        });        
+
+        return arrayAttachments;
+    }
+
+    downloadFile = async (id, userData, fileName, navigation) => {
+
+        const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            {
+                title: "Permissão para Download",
+                message: "O App precisa de sua permissão para baixar arquivos neste dispositivo."
+            }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            let crudService = new CrudService();
+            let result = await crudService.get(`attachments/fileExists/${id}`, userData.token);
+            
+            if(result.status == 200){
+                const { config, fs } = RNFetchBlob
+            
+                let DownloadDir = fs.dirs.DownloadDir 
+                let options = {
+                    fileCache: true,
+                    addAndroidDownloads : {
+                        useDownloadManager : true, 
+                        notification : true,
+                        path: DownloadDir + "/SIG/" + fileName, 
+                        description : 'Baixando arquivo.'
+                    }
+                }
+                config(options).fetch('GET', `http://sistemasig.duckdns.org:4999/sig/api/attachments?path=${result.data}`, {
+                    Authorization : `Bearer ${userData.token}`
+                }).then((res) => {
+                    
+                })
+                .catch((error) => {
+                    
+                    Alert.alert(
+                        "Erro",
+                        "Ocorreu um erro. " + error,
+                        [
+                            {
+                                text: "Ok",
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                })
+            }
+            else if(result.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => navigation.navigate('LoginEmail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(result.status == 400){
+                Alert.alert(
+                    "Erro",
+                    result.data,
+                    [
+                        {
+                            text: "Ok",
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+        } 
+        else {
+            Alert.alert(
+                "Permissão Negada!",
+                "O App não possui permissão para fazer downloads neste dispositivo."
+            );
+        }
+    }
+
+    pressInteraction = () => {
         
+        if(!this.props.isPressed){
+            if(this.state.color == "#fff"){
+                Vibration.vibrate(200);
+                this.setState({color: "#DCDCDC"});
+                this.props.changeBackgroundColor(true, this.props.interaction.interactionId, this.props.interaction.comment, this.props.interaction.private);
+            }
+            else{
+                this.setState({color: "#fff"});
+                this.props.changeBackgroundColor(false, this.props.interaction.interactionId, this.props.interaction.comment, this.props.interaction.private);
+            }
+        }
+        else{
+            if(this.state.color == "#DCDCDC"){
+                this.setState({color: "#fff"});
+                this.props.changeBackgroundColor(false, this.props.interaction.interactionId, this.props.interaction.comment, this.props.interaction.private);
+            }
+        }
+    }
+
+    render() {
+
         let textInteraction = "";
         let initials = "";
         let email = this.props.interaction.login.toLowerCase();
@@ -38,7 +181,8 @@ class MyListItem extends PureComponent {
         else if(arrInitials.length == 1)
             initials = arrInitials[0].substr(0,2).toUpperCase();
 
-        textInteraction = this.props.interaction.comment.replace("\\r\\n", "{'\\n'}");
+        textInteraction = this.props.interaction.comment.split("\\r\\n").join("{'\\n'}");
+        textInteraction = textInteraction.split("<br />").join("\n");
 
         if (this.props.interaction.userTypeId != 1) {
             render = <View style={{ marginBottom:5 }}>
@@ -47,14 +191,17 @@ class MyListItem extends PureComponent {
                                 <Avatar size="medium" rounded title={initials} />                        
                             </View>
                             <View style={{flex:5, justifyContent:'center'}}>
-                                <Text style={{fontSize:15, fontWeight: 'bold'}}>{this.props.interaction.name}</Text>
+                                <Text style={{fontSize:15, fontWeight: 'bold'}}>{this.props.interaction.private ? `${this.props.interaction.name} (Privado)` : `${this.props.interaction.name}`}</Text>
                                 <Text style={{fontSize:10, fontWeight: 'bold'}}>{email}</Text>
                                 <Text style={{fontSize:10, fontWeight: 'bold'}}>{moment(this.props.interaction.dateHour).format("DD/MM/YYYY HH:mm")}</Text>
                             </View>
                         </View>
-                        <Card containerStyle={{borderRadius:15}}>
-                            <Text style={{fontSize:15}}>{textInteraction}</Text>
-                        </Card>
+                        <TouchableOpacity onLongPress={() => this.pressInteraction()}>
+                            <Card containerStyle={{borderRadius:15, backgroundColor:this.state.color}}>
+                                <Text style={{fontSize:15}}>{textInteraction}</Text>
+                                {this.attachmentsInteraction()}
+                            </Card>
+                        </TouchableOpacity>
                     </View> 
         }
         else{
@@ -64,14 +211,17 @@ class MyListItem extends PureComponent {
                                 <Avatar size="medium" rounded title={initials} />                        
                             </View>
                             <View style={{flex:5, justifyContent:'center', alignItems:'flex-end', marginRight:15}}>
-                                <Text style={{fontSize:15, fontWeight: 'bold'}}>{this.props.interaction.name}</Text>
+                                <Text style={{fontSize:15, fontWeight: 'bold'}}>{this.props.interaction.private ? `${this.props.interaction.name} (Privado)` : `${this.props.interaction.name}`}</Text>
                                 <Text style={{fontSize:10, fontWeight: 'bold'}}>{email}</Text>
                                 <Text style={{fontSize:10, fontWeight: 'bold'}}>{moment(this.props.interaction.dateHour).format("DD/MM/YYYY HH:mm")}</Text>
                             </View>
                         </View>
-                        <Card containerStyle={{borderRadius:15}}>
-                            <Text style={{fontSize:15}}>{textInteraction}</Text>
-                        </Card>
+                        <TouchableOpacity onLongPress={() => this.pressInteraction()}>
+                            <Card containerStyle={{borderRadius:15, backgroundColor:this.state.color}}>
+                                <Text style={{fontSize:15}}>{textInteraction}</Text>
+                                {this.attachmentsInteraction()}
+                            </Card>
+                        </TouchableOpacity>
                     </View>
         }
 		return (
@@ -132,17 +282,54 @@ export default function ListInteractionsScreen(props){
     const [filesSendInteraction, setFilesSendInteraction] = useState([]);
     const [attachmentsList, setAttachmentsList] = useState([]);
     const [onEndReachedCalledDuringMomentum, setOnEndReachedCalledDuringMomentum ] = useState(false);
+    const [finishDemands, setFinishDemands] = useState(false);
+
+    const [isPressed, setIsPressed] = useState(false);
+    const [interactionId, setInteractionId] = useState(0);
+    const [commentEdit, setCommentEdit] = useState("");
+    const [isEdit, setIsEdit] = useState(false); 
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isPrivate, setIsPrivate] = useState(false);
 
     useEffect(() => {
 
         async function getInteractionsInitial(){
             await getInteractions();
             setRefreshing(false);
-            console.log(props.navigation.state.params)
 		}
 
         props.navigation.addListener('willFocus', (route) => { 
+            console.log(props.navigation.state.params)
+
+            setInteractionId(0);
+            setIsPressed(false);
+            setCommentEdit("");
+            setInteraction("");
+            setIsEdit(false);
+
+            setIsPrivate(false);
+            setFilesSendInteraction([]);
+            setTypeService(0);
+            setSendContact(true);
+            setHours(0);
+            setMinutes(0);
+            setListStatus({
+                selected: 50,
+                arrayCombo: [
+                    <Picker.Item key={50} value={50} label={`EM ATENDIMENTO`} />
+                ]
+            });
+            getInteractions();
+            setRefreshing(false);
+            
             getInteractionsInitial();
+            
+            if(props.navigation.state.params.createDemands.finishDemands){
+                setFinishDemands(true);
+            }
+            else{
+                setFinishDemands(false);
+            }
         });
 
         props.navigation.addListener('didBlur', (route) => { 
@@ -246,12 +433,33 @@ export default function ListInteractionsScreen(props){
     
     const renderItem = ({ item }) => (
 		<MyListItem
-			interaction={item}
+            interaction={item}
+            changeBackgroundColor={changeBackgroundColor}
+            isPressed={isPressed}
+            userData={props.navigation.state.params.userData}
+            navigation={props.navigation}
     	/>
     );
+
+    const changeBackgroundColor = (pressed, interactionId, comment, isCommentPrivate) => {
+        
+        setIsPressed(pressed);
+        if(pressed){
+            setIsPrivate(isCommentPrivate);
+            setInteractionId(interactionId);
+            setCommentEdit(comment);
+        }
+        else{
+            setIsPrivate(false);
+            setInteractionId(0);
+            setCommentEdit("");
+            setInteraction("");
+            setIsEdit(false);
+        }
+    }
     
     const showSaveButton = () => {
-
+        
         if(props.navigation.state.params.demandsId == undefined && props.navigation.state.params.createDemands.demandsId == undefined){
             return (
                     <TouchableWithoutFeedback onPress={() => saveDemands()}>
@@ -261,7 +469,279 @@ export default function ListInteractionsScreen(props){
                         />
                     </TouchableWithoutFeedback>
             )
-        }        
+        } 
+        else if(finishDemands == true){
+            
+            return  <View style={{flexDirection: 'row'}}>
+                        <TouchableWithoutFeedback onPress={() => closeFinishDemands()}>
+                            <Icon
+                                name='close'
+                                color='#fff'
+                            />
+                        </TouchableWithoutFeedback>
+                        
+                        <View style={{marginLeft: 10}}>
+                            <TouchableWithoutFeedback onPress={() => saveFinishDemands()}>
+                                <Icon
+                                    name='save'
+                                    color='#fff'
+                                />
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </View>
+        }      
+        else if(isPressed == true){
+            
+            let canDelete = props.navigation.state.params.userData.permissionAndMenu.find(permission => {
+                return permission.menuId == 131;
+            });
+
+            let canEdit = props.navigation.state.params.userData.permissionAndMenu.find(permission => {
+                return permission.menuId == 130;
+            });
+
+            if(canDelete != null && canEdit != null){
+                return  <View style={{flexDirection: 'row'}}>
+                        <TouchableWithoutFeedback onPress={() => deleteInteraction()}>
+                            <Icons
+                                name='trash' 
+                                style={{fontSize: 22, color: "white"}}
+                            />
+                        </TouchableWithoutFeedback>
+                        
+                        <View style={{marginLeft: 10}}>
+                            <TouchableWithoutFeedback onPress={() => editInteraction()}>
+                                <MaterialIcons
+                                    name='edit'
+                                    style={{fontSize: 22, color: "white"}}
+                                />
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </View>  
+            }          
+            else if(canDelete != null && canEdit == null){
+                return  <View style={{flexDirection: 'row'}}>
+                            <TouchableWithoutFeedback onPress={() => deleteInteraction()}>
+                                <Icons
+                                    name='trash' 
+                                    style={{fontSize: 22, color: "white"}}
+                                />
+                            </TouchableWithoutFeedback>
+                        </View> 
+            }
+            else if(canDelete == null && canEdit != null){
+                return  <View style={{flexDirection: 'row'}}>
+                            <TouchableWithoutFeedback onPress={() => editInteraction()}>
+                                <MaterialIcons
+                                    name='edit'
+                                    style={{fontSize: 22, color: "white"}}
+                                />
+                            </TouchableWithoutFeedback>
+                        </View> 
+            }
+        } 
+    }
+
+    const deleteInteraction = () => {
+
+        Alert.alert(
+            `Excluir Registro.`,
+            `Confirma a exclusão do registro?`,
+            [
+                {
+                    text: "Não",
+                    style: "nok"
+                },
+                {
+                    text: "Sim",
+                    onPress: () => confirmDeleteInteraction(),
+                    style: "ok"
+                }
+            ],
+            { cancelable: false }
+        );
+    }
+
+    const editInteraction = () => {
+
+        setInteraction(commentEdit);
+        setIsEdit(true);
+    }
+
+    const confirmDeleteInteraction = async () => {
+
+        setIsLoading(true);
+
+        let crudService = new CrudService();
+        
+        let result = await crudService.delete(`interactions/${interactionId}`, props.navigation.state.params.userData.token);
+        
+        if(result.status == 200){
+            
+            setIsPressed(false);
+            setInteractionId(0);
+            getInteractions();
+            setRefreshing(false);
+            setIsLoading(false);
+            
+            Alert.alert(
+                `Excluido com Sucesso.`,
+                `Registro excluido com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('DemandsDetail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            setIsLoading(false);
+
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            setIsLoading(false);
+
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            setIsLoading(false);
+
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    }
+
+    const closeFinishDemands = () => {
+
+        props.navigation.state.params.createDemands.finishDemands = false;
+        setFinishDemands(false);
+    }
+
+    const saveFinishDemands = async () => {
+
+        setIsLoading(true);
+
+        let demandsId = props.navigation.state.params.demandsId != undefined ? props.navigation.state.params.demandsId : props.navigation.state.params.createDemands.demandsId;
+        let label = props.navigation.state.params.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+
+        let data = {
+            demandsId: demandsId,
+            userHelpDeskId: props.navigation.state.params.userData.userData.userHelpDeskId,
+            userType: props.navigation.state.params.userData.userData.userType,
+            interaction: interaction,
+            term: label.name
+        }
+
+        let crudService = new CrudService();
+        
+        let result = await crudService.patch(`demands/finishDemands/${demandsId}`, data, props.navigation.state.params.userData.token);
+        
+        if(result.status == 200){
+            
+            props.navigation.state.params.createDemands.finishDemands = false;
+            setFinishDemands(false);
+            setInteraction("");
+            getInteractions();
+            setRefreshing(false);
+            setIsLoading(false);
+            
+            Alert.alert(
+                `Finalizado com Sucesso.`,
+                `${label.name} finalizado com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('DemandsDetail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            setIsLoading(false);
+
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            setIsLoading(false);
+
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            setIsLoading(false);
+
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
     }
 
     const saveDemands = async () => {
@@ -308,7 +788,7 @@ export default function ListInteractionsScreen(props){
                 [
                     {
                         text: "Ok",
-                        onPress: () => props.navigation.navigate('DemandsDetail', {userData: props.navigation.state.params.userData, demandsId: result.data.demandsId, createDemands: {}}),
+                        onPress: () => props.navigation.navigate('DemandsDetail', {demandsId: result.data.demandsId}),
                         style: "ok"
                     }
                 ],
@@ -373,10 +853,125 @@ export default function ListInteractionsScreen(props){
         }
     }
 
+    const pressSendInteraction = async () => {
+
+        if(!isEdit){
+            let canComment = props.navigation.state.params.userData.permissionAndMenu.find(permission => {
+                return permission.menuId == 43;
+            });
+    
+            if(canComment == null){
+                openSendDetails();
+            }
+            else{
+                setIsModalVisible(true);
+            }
+        }
+        else{
+            if(isPrivate){
+                let demandsId = props.navigation.state.params.demandsId != undefined ? props.navigation.state.params.demandsId : props.navigation.state.params.createDemands.demandsId;
+                setIsLoading(true);
+                setIsModalVisible(false);
+
+                let crudService = new CrudService();
+
+                let updateComment = {
+                    interactionId: interactionId,
+                    demandsId: demandsId,
+                    signatureId: props.navigation.state.params.userData.userData.signatureId,
+                    private: true,
+                    comment: interaction
+                };
+                
+                var data = new FormData();
+                data.append('Request', JSON.stringify(updateComment));
+
+                filesSendInteraction.forEach((file) => {
+                    data.append('Files', file);
+                });
+
+                result = await crudService.patchWithFile(`interactions/${interactionId}`, data, props.navigation.state.params.userData.token);
+                
+                if(result.status == 200){ 
+
+                    setInteractionId(0);
+                    setIsPressed(false);
+                    setCommentEdit("");
+                    setInteraction("");
+                    setIsEdit(false);
+                    
+                    setIsPrivate(false);
+                    setFilesSendInteraction([]);
+                    getInteractions();
+                    setRefreshing(false);
+
+                    Alert.alert(
+                        "Alterado com Sucesso.",
+                        `Comentário alterado com sucesso.`,
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => props.navigation.navigate('DemandsDetail'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else if(result.status == 401){
+                    Alert.alert(
+                        "Sessão Expirada",
+                        "Sua sessão expirou. Por favor, realize o login novamente.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => props.navigation.navigate('LoginEmail'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else if(result.status == 400){
+                    Alert.alert(
+                        "Erro",
+                        result.data[0],
+                        [
+                            {
+                                text: "Ok",
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else{
+                    Alert.alert(
+                        "Erro",
+                        "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => props.navigation.navigate('DemandsList'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                setIsLoading(false);
+            }
+            else{
+                openSendDetails();
+            }
+        }
+    }
+
     const openSendDetails = async () => {
 
+        setIsModalVisible(false);
         refRBSheet.current.open();
-
+        
         if(props.navigation.state.params.createDemands.getDemands.statusId == 50){
             setListStatus({
                 selected: listStatus.selected,
@@ -503,7 +1098,7 @@ export default function ListInteractionsScreen(props){
 
     const showSendButton = () => {
         
-        if(props.navigation.state.params.createDemands.getDemands != undefined){
+        if(props.navigation.state.params.createDemands.getDemands != undefined && !props.navigation.state.params.createDemands.finishDemands){
 
             let status = props.navigation.state.params.createDemands.getDemands.statusId;
 
@@ -513,7 +1108,7 @@ export default function ListInteractionsScreen(props){
                         <Icon
                             name='send'
                             color='#000'
-                            onPress={() => openSendDetails()} />
+                            onPress={() => pressSendInteraction()} />
                     </View>
                 )
             }
@@ -522,7 +1117,7 @@ export default function ListInteractionsScreen(props){
 
     const showAttachmentButton = () => {
         
-        if(props.navigation.state.params.createDemands.getDemands != undefined){
+        if(props.navigation.state.params.createDemands.getDemands != undefined && !props.navigation.state.params.createDemands.finishDemands){
 
             let status = props.navigation.state.params.createDemands.getDemands.statusId;
 
@@ -742,6 +1337,100 @@ export default function ListInteractionsScreen(props){
         });
     }
 
+    const saveComment = async () => {
+
+        let demandsId = props.navigation.state.params.demandsId != undefined ? props.navigation.state.params.demandsId : props.navigation.state.params.createDemands.demandsId;
+        setIsLoading(true);
+        setIsModalVisible(false);
+
+        let crudService = new CrudService();
+
+        let createComment = {
+            demandsId: demandsId,
+            signatureId: props.navigation.state.params.userData.userData.signatureId,
+            userHelpDeskId: props.navigation.state.params.userData.userData.userHelpDeskId,
+            userType: props.navigation.state.params.userData.userData.userType,
+            private: true,
+            comment: interaction,
+            serviceType: 0,
+            attendanceTime: "0:0",
+            showDescription: false,
+            sendEmail: false
+        };
+        
+        var data = new FormData();
+        data.append('Request', JSON.stringify(createComment));
+
+        filesSendInteraction.forEach((file) => {
+            data.append('Files', file);
+        });
+        
+        result = await crudService.postWithFile(`interactions`, data, props.navigation.state.params.userData.token);
+        
+        if(result.status == 200){  
+            
+            setInteraction("");
+            setFilesSendInteraction([]);
+            getInteractions();
+            setRefreshing(false);
+
+            Alert.alert(
+                "Cadastrado com Sucesso.",
+                `Comentário criado com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('DemandsDetail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        setIsLoading(false);
+    }
+
     const saveInteraction = async () => {
 
         let demandsId = props.navigation.state.params.demandsId != undefined ? props.navigation.state.params.demandsId : props.navigation.state.params.createDemands.demandsId;
@@ -753,8 +1442,7 @@ export default function ListInteractionsScreen(props){
         let minutesValidate = minutes == "" ? 0 : minutes.trim().replace(",",".");
         
         if(hoursValidate < 0){
-            setIsLoading(false);
-
+            
             Alert.alert(
                 "Erro",
                 "Hora não pode ser um valor menor que 0.",
@@ -769,8 +1457,7 @@ export default function ListInteractionsScreen(props){
             );
         }
         else if(minutesValidate < 0 || minutesValidate > 59){
-            setIsLoading(false);
-
+            
             Alert.alert(
                 "Erro",
                 "Minuto não pode ser um valor menor que 0 ou maior do que 59.",
@@ -785,8 +1472,7 @@ export default function ListInteractionsScreen(props){
             );
         }
         else if(!((hoursValidate % 1) === 0)) {
-            setIsLoading(false);
-
+            
             Alert.alert(
                 "Erro",
                 "Hora inválida.",
@@ -801,8 +1487,7 @@ export default function ListInteractionsScreen(props){
             );
         }
         else if(!((minutesValidate % 1) === 0)) {
-            setIsLoading(false);
-
+            
             Alert.alert(
                 "Erro",
                 "Minuto inválido.",
@@ -817,72 +1502,131 @@ export default function ListInteractionsScreen(props){
             );
         }
         else{
-            let label = props.navigation.state.params.userData.labels.find((lbl) => {
-                return lbl.typeLabel == 1
-            });
-    
-            let createInteraction = {
-                demandsId: demandsId,
-                signatureId: props.navigation.state.params.userData.userData.signatureId,
-                userHelpDeskId: props.navigation.state.params.userData.userData.userHelpDeskId,
-                userType: props.navigation.state.params.userData.userData.userType,
-                private: false,
-                comment: interaction,
-                serviceType: typeService,
-                attendanceTime: `${hoursValidate}:${minutesValidate}`,
-                showDescription: true,
-                sendEmail: sendContact,
-                status: listStatus.selected,
-                contactId: listContacts.selected,
-                operatorId: listOperators.selected,
-                term: label.name
-            };
-    
-            var data = new FormData();
-            data.append('Request', JSON.stringify(createInteraction));
-    
-            filesSendInteraction.forEach((file) => {
-                data.append('Files', file);
-            });
-            
+
+            let result = {};
             let crudService = new CrudService();
-    
-            let result = await crudService.postWithFile(`interactions`, data, props.navigation.state.params.userData.token);
-            
-            if(result.status == 200){  
-                
-                setInteraction("");
-                setFilesSendInteraction([]);
-                setTypeService(0);
-                setSendContact(true);
-                setHours(0);
-                setMinutes(0);
-                setListStatus({
-                    selected: 50,
-                    arrayCombo: [
-                        <Picker.Item key={50} value={50} label={`EM ATENDIMENTO`} />
-                    ]
+
+            if(!isEdit){
+                let label = props.navigation.state.params.userData.labels.find((lbl) => {
+                    return lbl.typeLabel == 1
                 });
-                getInteractions();
-                setRefreshing(false);
-                setIsLoading(false);
-    
-                Alert.alert(
-                    "Cadastrado com Sucesso.",
-                    `Interação criada com sucesso.`,
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => props.navigation.navigate('DemandsDetail', {userData: props.navigation.state.params.userData, createDemands: {}, demandsId: demandsId}),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
+        
+                let createInteraction = {
+                    demandsId: demandsId,
+                    signatureId: props.navigation.state.params.userData.userData.signatureId,
+                    userHelpDeskId: props.navigation.state.params.userData.userData.userHelpDeskId,
+                    userType: props.navigation.state.params.userData.userData.userType,
+                    private: false,
+                    comment: interaction,
+                    serviceType: typeService,
+                    attendanceTime: `${hoursValidate}:${minutesValidate}`,
+                    showDescription: true,
+                    sendEmail: sendContact,
+                    status: listStatus.selected,
+                    contactId: listContacts.selected,
+                    operatorId: listOperators.selected,
+                    term: label.name
+                };
+        
+                var data = new FormData();
+                data.append('Request', JSON.stringify(createInteraction));
+        
+                filesSendInteraction.forEach((file) => {
+                    data.append('Files', file);
+                });
+                
+                result = await crudService.postWithFile(`interactions`, data, props.navigation.state.params.userData.token);
+                
+                if(result.status == 200){  
+                    
+                    setInteraction("");
+                    setFilesSendInteraction([]);
+                    setTypeService(0);
+                    setSendContact(true);
+                    setHours(0);
+                    setMinutes(0);
+                    setListStatus({
+                        selected: 50,
+                        arrayCombo: [
+                            <Picker.Item key={50} value={50} label={`EM ATENDIMENTO`} />
+                        ]
+                    });
+                    getInteractions();
+                    setRefreshing(false);
+        
+                    Alert.alert(
+                        "Cadastrado com Sucesso.",
+                        `Interação criada com sucesso.`,
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => props.navigation.navigate('DemandsDetail'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
             }
-            else if(result.status == 401){
-                setIsLoading(false);
-    
+            else{
+                let updateInteraction = {
+                    interactionId: interactionId,
+                    demandsId: demandsId,
+                    signatureId: props.navigation.state.params.userData.userData.signatureId,
+                    private: false,
+                    comment: interaction,
+                    serviceType: typeService,
+                    attendanceTime: `${hoursValidate}:${minutesValidate}`,
+                    status: listStatus.selected,
+                };
+        
+                var data = new FormData();
+                data.append('Request', JSON.stringify(updateInteraction));
+        
+                filesSendInteraction.forEach((file) => {
+                    data.append('Files', file);
+                });
+                
+                result = await crudService.patchWithFile(`interactions/${interactionId}`, data, props.navigation.state.params.userData.token);
+                
+                if(result.status == 200){  
+                    
+                    setInteractionId(0);
+                    setIsPressed(false);
+                    setCommentEdit("");
+                    setInteraction("");
+                    setIsEdit(false);
+
+                    setFilesSendInteraction([]);
+                    setTypeService(0);
+                    setSendContact(true);
+                    setHours(0);
+                    setMinutes(0);
+                    setListStatus({
+                        selected: 50,
+                        arrayCombo: [
+                            <Picker.Item key={50} value={50} label={`EM ATENDIMENTO`} />
+                        ]
+                    });
+                    getInteractions();
+                    setRefreshing(false);
+                    
+                    Alert.alert(
+                        "Alterado com Sucesso.",
+                        `Interação alterada com sucesso.`,
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => props.navigation.navigate('DemandsDetail'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+            }
+            
+            if(result.status == 401){
                 Alert.alert(
                     "Sessão Expirada",
                     "Sua sessão expirou. Por favor, realize o login novamente.",
@@ -897,8 +1641,6 @@ export default function ListInteractionsScreen(props){
                 );
             }
             else if(result.status == 400){
-                setIsLoading(false);
-    
                 Alert.alert(
                     "Erro",
                     result.data[0],
@@ -912,9 +1654,7 @@ export default function ListInteractionsScreen(props){
                     { cancelable: false }
                 );
             }
-            else{
-                setIsLoading(false);
-    
+            else if(result.status != 400 && result.status != 401 && result.status != 200){
                 Alert.alert(
                     "Erro",
                     "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
@@ -929,6 +1669,7 @@ export default function ListInteractionsScreen(props){
                 );
             }
         }
+        setIsLoading(false);
     }
 
     return(
@@ -1061,45 +1802,48 @@ export default function ListInteractionsScreen(props){
                                                 style={styles.input} />
                                         </View>
                                     </View>
-
-                                    <Text style={{marginBottom:10}}>Encaminhar para Contato:</Text>
-                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                        <Picker
-                                            style={pickerStyle}
-                                            selectedValue={listContacts.selected}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setListContacts({
-                                                    array: [...listContacts.array],
-                                                    selected: itemValue,
-                                                    arrayCombo: [...listContacts.arrayCombo]
-                                                })
-                                            }>
-                                            {listContacts.arrayCombo}
-                                        </Picker>
-                                    </View>
-
-                                    <Text style={{marginBottom:10}}>Encaminhar para Operador:</Text>
-                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                        <Picker
-                                            style={pickerStyle}
-                                            selectedValue={listOperators.selected}
-                                            onValueChange={(itemValue, itemIndex) =>
-                                                setListOperators({
-                                                    array: [...listOperators.array],
-                                                    selected: itemValue,
-                                                    arrayCombo: [...listOperators.arrayCombo]
-                                                })
-                                            }>
-                                            {listOperators.arrayCombo}
-                                        </Picker>
-                                    </View>
-
-                                    <CheckBox
-                                        center
-                                        title='Enviar email p/ contato'
-                                        checked={sendContact}
-                                        onPress={() => setSendContact(!sendContact)}
-                                    />
+                                    {isEdit == false && 
+                                        <>
+                                            <Text style={{marginBottom:10}}>Encaminhar para Contato:</Text>
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                <Picker
+                                                    style={pickerStyle}
+                                                    selectedValue={listContacts.selected}
+                                                    onValueChange={(itemValue, itemIndex) =>
+                                                        setListContacts({
+                                                            array: [...listContacts.array],
+                                                            selected: itemValue,
+                                                            arrayCombo: [...listContacts.arrayCombo]
+                                                        })
+                                                    }>
+                                                    {listContacts.arrayCombo}
+                                                </Picker>
+                                            </View>
+        
+                                            <Text style={{marginBottom:10}}>Encaminhar para Operador:</Text>
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                <Picker
+                                                    style={pickerStyle}
+                                                    selectedValue={listOperators.selected}
+                                                    onValueChange={(itemValue, itemIndex) =>
+                                                        setListOperators({
+                                                            array: [...listOperators.array],
+                                                            selected: itemValue,
+                                                            arrayCombo: [...listOperators.arrayCombo]
+                                                        })
+                                                    }>
+                                                    {listOperators.arrayCombo}
+                                                </Picker>
+                                            </View>
+        
+                                            <CheckBox
+                                                center
+                                                title='Enviar email p/ contato'
+                                                checked={sendContact}
+                                                onPress={() => setSendContact(!sendContact)}
+                                            />
+                                        </>
+                                    }
 
                                     <View style={{flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10}}>
                                         <TouchableOpacity
@@ -1132,7 +1876,7 @@ export default function ListInteractionsScreen(props){
                                     backgroundColor: "rgba(0,0,0,0.5)"
                                 },
                                 container: {
-                                    height: "35%",
+                                    height: "40%",
                                     borderTopLeftRadius: 20,
                                     borderTopRightRadius: 20,
                                     paddingLeft: 25,
@@ -1146,6 +1890,33 @@ export default function ListInteractionsScreen(props){
                             <Text h4 style={{marginBottom:10, marginTop:15, textAlign: 'center'}}>Anexos</Text>
                             {attachmentsList}
                         </RBSheet>
+
+                        <Modal 
+                            isVisible={isModalVisible}
+                            onBackdropPress={() => setIsModalVisible(false)}    
+                        >
+                            <View style={{backgroundColor: "white"}}>
+                                <Text style={{textAlign: "center", marginBottom:20, marginTop: 20, fontSize: 20}}>Tipo de Interação:</Text>
+                                <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                                    <TouchableOpacity onPress={() => saveComment()}>
+                                        <Icons
+                                            name='user-secret' 
+                                            style={{fontSize: 50, color: "black", marginLeft: 5}}
+                                        />
+                                    </TouchableOpacity>
+                                    <TouchableOpacity onPress={() => openSendDetails()}>
+                                        <MaterialIcons
+                                            name='public' 
+                                            style={{fontSize: 50, color: "black", marginLeft: 5}}
+                                        />
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                                    <Text style={{marginBottom:30}}>Privada</Text>
+                                    <Text style={{marginBottom:30}}>Publica</Text>
+                                </View>
+                            </View>
+                        </Modal>
                     </React.Fragment> 
                 )
             }
