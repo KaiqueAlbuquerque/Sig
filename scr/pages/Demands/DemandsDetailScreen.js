@@ -19,7 +19,7 @@ import { View,
          Alert } from 'react-native';
 import { Card, Header, Text, Icon, ListItem } from 'react-native-elements';
 import Icons from "react-native-vector-icons/FontAwesome";
-
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 import COLORS from '../../styles/Colors.js';
 import CardFiles from '../Components/CardFiles.js';
@@ -29,6 +29,8 @@ import CrudService from '../../services/Crud/CrudService.js';
 
 import ImagePicker from 'react-native-image-picker';
 import DocumentPicker from 'react-native-document-picker';
+
+import Modal from 'react-native-modal';
 
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
@@ -145,7 +147,18 @@ export class DemandsDetailScreen extends Component{
             },
             updateSupportLevel: false,
             finishDemands: false,
-            editDemands: false
+            editDemands: false,
+            forwardDemandsOperator: false,
+            forwardDemandsArea: false,
+            isModalVisible: false,
+            operator: {
+                array: [],
+                selected: 0,
+                enabled: false,
+                arrayCombo: [
+                    <Picker.Item key={0} value={0} label={`NENHUM OPERADOR RESPONSÁVEL`} />
+                ]
+            },
         }
     }
 
@@ -286,7 +299,7 @@ export class DemandsDetailScreen extends Component{
                 ]
             }
         }, () => {
-            if(this.state.dataDemands != null && !this.state.canShowPicker)
+            if(this.state.dataDemands != null && !this.state.canShowPicker && !this.state.forwardDemandsArea)
             {
                 this.changeSubject(this.state.dataDemands.subjectId);
             }
@@ -686,14 +699,19 @@ export class DemandsDetailScreen extends Component{
                 selected: itemValue,
                 enabled: this.state.area.enabled,
                 arrayCombo: [...this.state.area.arrayCombo]
-            },
-            sla: "",
-            expectedDateTime: '',
-            switch: {
-                isEnabled: false,
-                disabled: this.state.switch.disabled
             }
         });
+
+        if(!this.state.forwardDemandsArea){
+            this.setState({
+                sla: "",
+                expectedDateTime: '',
+                switch: {
+                    isEnabled: false,
+                    disabled: this.state.switch.disabled
+                }
+            });
+        }
 
         this.props.navigation.state.params.createDemands.forecast = '';
         this.props.navigation.state.params.createDemands.sectorHelpDeskId = itemValue;
@@ -823,7 +841,7 @@ export class DemandsDetailScreen extends Component{
     changeCategory = async (itemValue) => {
         
         let enable = true;
-        if(this.state.dataDemands != null && !this.state.canShowPicker)
+        if(this.state.dataDemands != null && !this.state.canShowPicker && !this.state.forwardDemandsArea)
             enable = false;
 
         this.setState({
@@ -832,14 +850,19 @@ export class DemandsDetailScreen extends Component{
                 enabled: enable,
                 selected: itemValue,
                 arrayCombo: [...this.state.category.arrayCombo]
-            },
-            sla: "",
-            expectedDateTime: '',
-            switch: {
-                isEnabled: false,
-                disabled: this.state.switch.disabled
             }
         });
+
+        if(!this.state.forwardDemandsArea){
+            this.setState({
+                sla: "",
+                expectedDateTime: '',
+                switch: {
+                    isEnabled: false,
+                    disabled: this.state.switch.disabled
+                }
+            });
+        }
 
         this.props.navigation.state.params.createDemands.forecast = '';
         this.props.navigation.state.params.createDemands.categoryId = itemValue;
@@ -941,18 +964,20 @@ export class DemandsDetailScreen extends Component{
             else
                 sla = slaReturn.time;
             
-            if(this.state.dataDemands == null || this.state.canShowPicker){
+            if(this.state.dataDemands == null || this.state.canShowPicker || this.state.forwardDemandsArea){
                 
-                this.setState({
-                    sla: sla,
-                    expectedDateTime: moment(slaReturn.expectedDate).format("DD/MM/YYYY HH:mm"),
-                    switch: {
-                        isEnabled: false,        
-                        disabled: this.state.switch.disabled
-                    }
-                });
-
-                this.props.navigation.state.params.createDemands.forecast = moment(slaReturn.expectedDate).format("YYYY/MM/DD HH:mm");
+                if(!this.state.forwardDemandsArea){
+                    this.setState({
+                        sla: sla,
+                        expectedDateTime: moment(slaReturn.expectedDate).format("DD/MM/YYYY HH:mm"),
+                        switch: {
+                            isEnabled: false,        
+                            disabled: this.state.switch.disabled
+                        }
+                    });
+    
+                    this.props.navigation.state.params.createDemands.forecast = moment(slaReturn.expectedDate).format("YYYY/MM/DD HH:mm");
+                }
             }
             else{
                 if(this.state.dataDemands.forecast != null){
@@ -1291,14 +1316,26 @@ export class DemandsDetailScreen extends Component{
     showResponsibleOperator = () => {
         
         if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined){
-            let operator = this.state.dataDemands.responsibleOperator != "" ? this.state.dataDemands.responsibleOperator : "Nenhum Operador Responsável"
-
+            
             return  <>
                         <Text style={{marginBottom:5}}>Operador Responsável:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                            <TextInput style={styles.input} 
-                                editable={false}
-                                value={operator}/>
+                            <Picker
+                                enabled={this.state.operator.enabled}
+                                style={pickerStyle}
+                                selectedValue={this.state.operator.selected}
+                                onValueChange={(itemValue, itemIndex) =>
+                                    this.setState({
+                                        operator: {
+                                            array: this.state.operator.array,
+                                            selected: itemValue,
+                                            enabled: this.state.operator.enabled,
+                                            arrayCombo: this.state.operator.arrayCombo
+                                        }
+                                    })
+                                }>
+                                    {this.state.operator.arrayCombo}
+                            </Picker>
                         </View>
                     </>
         }
@@ -1368,6 +1405,342 @@ export class DemandsDetailScreen extends Component{
         }
     }
 
+    closeForwardDemandsOperator = () => {
+
+        this.setState({
+            forwardDemandsOperator: false,
+            operator: {
+                array: this.state.operator.array,
+                selected: this.state.operator.selected,
+                enabled: false,
+                arrayCombo: this.state.operator.arrayCombo
+            },
+        });
+    }
+
+    closeForwardDemandsArea = async () => {
+        
+        this.setState({
+            forwardDemandsArea: false,
+            isLoading: true
+        });
+
+        await this.commonDidMount();
+
+        this.setState({
+            isLoading: false
+        });
+    }
+
+    saveForwardDemandsOperator = async () => {
+
+        this.setState({
+            isLoading: true
+        });
+
+        let operatorObj = this.state.operator.array.find(operator => {
+            return operator.operatorId === this.state.operator.selected;
+        });
+
+        let label = this.props.navigation.state.params.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+
+        let data = {
+            signatureId: this.state.data.userData.userData.signatureId,
+            demandsId: this.state.data.demandsId,
+            operatorId: this.state.operator.selected,
+            name: operatorObj.operatorName,
+            userHelpDeskId: this.state.data.userData.userData.userHelpDeskId,
+            userType: this.state.data.userData.userData.userType,
+            term: label.name
+        }
+
+        let crudService = new CrudService();
+        
+        let result = await crudService.patch(`demands/forwardDemandsOperator/${this.state.data.demandsId}`, data, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            
+            this.setState({
+                forwardDemandsOperator: false,
+                operator: {
+                    array: this.state.operator.array,
+                    selected: this.state.operator.selected,
+                    enabled: false,
+                    arrayCombo: this.state.operator.arrayCombo
+                },
+            })
+
+            await this.commonDidMount();
+            
+            Alert.alert(
+                "Encaminhado com Sucesso.",
+                `${label.name} encaminhado com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        this.setState({
+            isLoading: false
+        });
+    }
+
+    saveForwardDemandsArea = async () => {
+
+        this.setState({
+            isLoading: true
+        });
+
+        let areaObj = this.state.area.array.find(area => {
+            return area.areaId === this.state.area.selected;
+        });
+
+        let label = this.props.navigation.state.params.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
+
+        let data = {
+            demandsId: this.state.data.demandsId,
+            areaId: this.state.area.selected,
+            categoryId: this.state.category.selected,
+            subjectId: this.state.subject.selected,
+            name: areaObj.areaName,
+            userHelpDeskId: this.state.data.userData.userData.userHelpDeskId,
+            userType: this.state.data.userData.userData.userType,
+            term: label.name
+        }
+
+        let crudService = new CrudService();
+        
+        let result = await crudService.patch(`demands/forwardDemandsArea/${this.state.data.demandsId}`, data, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            
+            this.setState({
+                forwardDemandsArea: false,
+                area: {
+                    array: this.state.area.array,
+                    selected: this.state.area.selected,
+                    enabled: false,
+                    arrayCombo: this.state.area.arrayCombo
+                },
+                category: {
+                    array: this.state.category.array,
+                    selected: this.state.category.selected,
+                    enabled: false,
+                    arrayCombo: this.state.category.arrayCombo
+                },
+                subject: {
+                    array: this.state.subject.array,
+                    selected: this.state.subject.selected,
+                    enabled: false,
+                    arrayCombo: this.state.subject.arrayCombo
+                }
+            })
+
+            await this.commonDidMount();
+            
+            Alert.alert(
+                "Encaminhado com Sucesso.",
+                `${label.name} encaminhado com sucesso.`,
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        this.setState({
+            isLoading: false
+        });
+    }
+
+    clickForwardArea = async () => {
+
+        let clientInList = this.state.client.array.find((cli) => {
+            return cli.clientId == this.state.client.selected;
+        });
+
+        let crudService = new CrudService();
+        let result = await crudService.get(`comboDemands/getComboAreaForward/${clientInList.clientHelpDeskId}`, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            this.setState({
+                area:{
+                    array: [...result.data],
+                    selected: this.state.area.selected,
+                    enabled: this.state.area.enabled
+                }
+            }, this.populateArea);
+        }
+        else if(result.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        this.setState({
+            isModalVisible: false,
+            forwardDemandsArea: true,
+            area: {
+                array: this.state.area.array,
+                selected: this.state.area.selected,
+                enabled: true,
+                arrayCombo: this.state.area.arrayCombo
+            },
+            category: {
+                array: this.state.category.array,
+                selected: this.state.category.selected,
+                enabled: true,
+                arrayCombo: this.state.category.arrayCombo
+            },
+            subject: {
+                array: this.state.subject.array,
+                selected: this.state.subject.selected,
+                enabled: true,
+                arrayCombo: this.state.subject.arrayCombo
+            }
+        });
+
+        this.downButtonHandler(-40);
+    }
+
     showSaveButton = () => {
         
         if(this.state.updateSupportLevel == true){
@@ -1430,8 +1803,48 @@ export class DemandsDetailScreen extends Component{
                         </View>
                     </View>
         }
+        else if(this.state.forwardDemandsOperator == true){
+            
+            return  <View style={{flexDirection: 'row'}}>
+                        <TouchableWithoutFeedback onPress={() => this.closeForwardDemandsOperator()}>
+                            <Icon
+                                name='close'
+                                color='#fff'
+                            />
+                        </TouchableWithoutFeedback>
+                        
+                        <View style={{marginLeft: 10}}>
+                            <TouchableWithoutFeedback onPress={() => this.saveForwardDemandsOperator()}>
+                                <Icon
+                                    name='save'
+                                    color='#fff'
+                                />
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </View>
+        }
+        else if(this.state.forwardDemandsArea == true){
+            
+            return  <View style={{flexDirection: 'row'}}>
+                        <TouchableWithoutFeedback onPress={() => this.closeForwardDemandsArea()}>
+                            <Icon
+                                name='close'
+                                color='#fff'
+                            />
+                        </TouchableWithoutFeedback>
+                        
+                        <View style={{marginLeft: 10}}>
+                            <TouchableWithoutFeedback onPress={() => this.saveForwardDemandsArea()}>
+                                <Icon
+                                    name='save'
+                                    color='#fff'
+                                />
+                            </TouchableWithoutFeedback>
+                        </View>
+                    </View>
+        }
         else if(this.state.data.demandsId == undefined){
-            return <TouchableWithoutFeedback onPress={() => this.saveDemands()}>
+            return  <TouchableWithoutFeedback onPress={() => this.saveDemands()}>
                         <Icon
                             name='save'
                             color='#fff'
@@ -1439,7 +1852,7 @@ export class DemandsDetailScreen extends Component{
                     </TouchableWithoutFeedback>
         }
         else{
-            return <TouchableWithoutFeedback onPress={() => this.RBSheet2.open()}>
+            return  <TouchableWithoutFeedback onPress={() => this.RBSheet2.open()}>
                         <Icons
                             name='plus' 
                             style={{fontSize: 20, color: "white"}}
@@ -1903,6 +2316,12 @@ export class DemandsDetailScreen extends Component{
         await this.finishDemandsFunction(this.props.navigation.state.params.createDemands.description);
     }
 
+    forwardDemandsFunction = () => {
+
+        this.RBSheet2.close();
+        this.setState({isModalVisible: true});
+    }
+
     editDemandsFunction = () => {
 
         this.RBSheet2.close();
@@ -2009,7 +2428,7 @@ export class DemandsDetailScreen extends Component{
             
                     actions.push(
                         <ListItem
-                            button onPress={() => console.log("aqui") }
+                            button onPress={() => this.forwardDemandsFunction() }
                             key={3}
                             title={`Encaminhar ${label.name}`}
                             leftElement={ 
@@ -2173,16 +2592,16 @@ export class DemandsDetailScreen extends Component{
         
         this.RBSheet2.close();
 
-        this.downButtonHandler();
+        this.downButtonHandler(150);
     }
 
-    downButtonHandler = () => {
+    downButtonHandler = (moveHeight) => {
 
         const windowHeight = Dimensions.get('window').height;
 
         this.scrollview_ref.scrollTo({
             x: 0,
-            y: windowHeight + 150,
+            y: windowHeight + moveHeight,
             animated: true,
         });
     };
@@ -2494,6 +2913,74 @@ export class DemandsDetailScreen extends Component{
                         filterProdut: ""
                     }
                 }, this.afterDidMount);
+
+                let result = await crudService.get(`comboDemands/getComboOperators/${getDemands.data.areaId}`, this.state.data.userData.token);
+                
+                let arrCombo = [];
+                let arr = [];
+                
+                if(result.status == 200){
+                    
+                    result.data.forEach(operator => {
+                        arrCombo.push(<Picker.Item key={operator.operatorId} value={operator.operatorId} label={operator.operatorName} />);
+                        arr.push(operator);
+                    });
+
+                    this.setState({
+                        operator: {
+                            array: arr,
+                            enabled: false,
+                            selected: getDemands.data.responsibleOperatorId,
+                            arrayCombo: [<Picker.Item key={0} value={0} label={`NENHUM OPERADOR RESPONSÁVEL`} />, 
+                                         ...arrCombo
+                            ],
+                        }
+                    });
+                }
+                else if(result.status == 401){
+                    
+                    Alert.alert(
+                        "Sessão Expirada",
+                        "Sua sessão expirou. Por favor, realize o login novamente.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('LoginEmail'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else if(result.status == 400){
+                    
+                    Alert.alert(
+                        "Erro",
+                        result.data[0],
+                        [
+                            {
+                                text: "Ok",
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else{
+                    
+                    Alert.alert(
+                        "Erro",
+                        "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('DemandsList'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
             }
             else if(getDemands.status == 401){
                 Alert.alert(
@@ -2943,6 +3430,44 @@ export class DemandsDetailScreen extends Component{
                                                     {this.showListActions()}
                                                 </ScrollView>
                                             </RBSheet>
+
+                                            <Modal 
+                                                isVisible={this.state.isModalVisible}
+                                                onBackdropPress={() => this.setState({isModalVisible: false})}    
+                                            >
+                                                <View style={{backgroundColor: "white"}}>
+                                                    <Text style={{textAlign: "center", marginBottom:20, marginTop: 20, fontSize: 20}}>Encaminhar para:</Text>
+                                                    <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                                                        <TouchableOpacity onPress={() => this.clickForwardArea()}>
+                                                            <MaterialIcons
+                                                                name='business' 
+                                                                style={{fontSize: 50, color: "black"}}
+                                                            />
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity onPress={() => {
+                                                            this.setState({
+                                                                isModalVisible: false,
+                                                                forwardDemandsOperator: true,
+                                                                operator: {
+                                                                    array: this.state.operator.array,
+                                                                    selected: this.state.operator.selected,
+                                                                    enabled: true,
+                                                                    arrayCombo: this.state.operator.arrayCombo
+                                                                },
+                                                            });
+                                                        }}>
+                                                            <MaterialIcons
+                                                                name='person' 
+                                                                style={{fontSize: 50, color: "black", marginLeft: 5}}
+                                                            />
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                    <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                                                        <Text style={{marginBottom:30, marginLeft: 15}}>Área</Text>
+                                                        <Text style={{marginBottom:30, marginLeft: 30}}>Operador</Text>
+                                                    </View>
+                                                </View>
+                                            </Modal>
                                         </View>
                                     </View>
                                 </ScrollView>
