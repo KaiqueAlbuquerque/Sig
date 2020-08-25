@@ -162,6 +162,90 @@ export class DemandsDetailScreen extends Component{
         }
     }
 
+    confirmChangeProduct = async (productId, labelEquipment) => {
+
+        this.RBSheet.close();
+
+        this.setState({
+            isLoading: true
+        });
+
+        let demandsId = this.state.data.demandsId == undefined ? this.state.dataDemands : this.state.data.demandsId;
+
+        let crudService = new CrudService();
+    
+        let result = await crudService.patch(`demands/changeProductDemands/${demandsId}/${productId}`, {}, this.state.data.userData.token);
+        
+        if(result.status == 200){
+            this.setState({
+                products: {
+                    listProducts: this.state.products.listProducts,
+                    selectOrChange: "Trocar",
+                    selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
+                }
+            });
+    
+            Alert.alert(
+                "Alterado com Sucesso",
+                "Equipamento alterado com sucesso.",
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 401){
+            Alert.alert(
+                "Sessão Expirada",
+                "Sua sessão expirou. Por favor, realize o login novamente.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+
+            this.RBSheet.open();
+        }
+        else{
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+
+        this.setState({
+            isLoading: false
+        });
+    }
+
     changeProduct = (product) => {
 
         let labelEquipment = "Nenhum Equipamento!";
@@ -175,17 +259,37 @@ export class DemandsDetailScreen extends Component{
             labelEquipment = `${product.internalCode}`;
         }
 
-        this.setState({
-            products: {
-                listProducts: this.state.products.listProducts,
-                selectOrChange: "Trocar",
-                selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
-            }
-        });
-
-        this.props.navigation.state.params.createDemands.productId = product.productId;
-
-        this.RBSheet.close();
+        if(this.state.data.demandsId == undefined && this.state.dataDemands == undefined){
+            this.setState({
+                products: {
+                    listProducts: this.state.products.listProducts,
+                    selectOrChange: "Trocar",
+                    selected: <Text style={{marginBottom:10, fontSize: 15}}>{labelEquipment}</Text>
+                }
+            });
+    
+            this.props.navigation.state.params.createDemands.productId = product.productId;
+    
+            this.RBSheet.close();
+        }
+        else{
+            Alert.alert(
+                "Troca de produto",
+                "Confirma troca do produto?",
+                [
+                    {
+                        text: "Não",
+                        style: "nok"
+                    },
+                    {
+                        text: "Sim",
+                        onPress: () => this.confirmChangeProduct(product.productId, labelEquipment),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
     }
 
     populateClient = () => {
@@ -1693,7 +1797,6 @@ export class DemandsDetailScreen extends Component{
                 [
                     {
                         text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
                         style: "ok"
                     }
                 ],
@@ -3355,12 +3458,18 @@ export class DemandsDetailScreen extends Component{
                                                 
                                             <Text h4 style={{marginTop: 10}}>Anexos:</Text>
                                             {this.state.attachmentsList}
-                
-                                            <View style={{marginTop:10, marginBottom:10}}>
-                                                <TouchableOpacity onPress={this.openPicker}>
-                                                    <Text>Selecione os arquivos</Text>
-                                                </TouchableOpacity>
-                                            </View>
+                                            
+                                            {
+                                                this.state.data.demandsId == undefined && 
+                                                this.state.dataDemands == undefined &&
+                                                (
+                                                    <View style={{marginTop:10, marginBottom:10}}>
+                                                        <TouchableOpacity onPress={this.openPicker}>
+                                                            <Text>Selecione os arquivos</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                )
+                                            }
                                             
                                             {this.showDescription()}
                 
