@@ -17,7 +17,7 @@ import { View,
          ActivityIndicator,
          Switch,
          Alert } from 'react-native';
-import { Card, Header, Text, Icon, ListItem } from 'react-native-elements';
+import { Card, Header, Text, Icon, ListItem, CheckBox } from 'react-native-elements';
 import Icons from "react-native-vector-icons/FontAwesome";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
@@ -124,7 +124,12 @@ export class DemandsDetailScreen extends Component{
             },
             level: {
                 levelId: 0,
-                enabled: true
+                enabled: true,
+                arrayCombo: [
+                    <Picker.Item key={1} value={1} label="NIVEL 1" />,
+                    <Picker.Item key={2} value={2} label="NIVEL 2" />,
+                    <Picker.Item key={3} value={3} label="NIVEL 3" />
+                ]
             },
             descriptionEditable: false,
             canShowPicker: false,
@@ -159,6 +164,27 @@ export class DemandsDetailScreen extends Component{
                     <Picker.Item key={0} value={0} label={`NENHUM OPERADOR RESPONSÁVEL`} />
                 ]
             },
+            subjectNotFound: false
+        }
+    }
+
+    pressSubjectNotFound = () => {
+        
+        this.setState({
+            subjectNotFound: !this.state.subjectNotFound,
+            subject: {
+                array: this.state.subject.array,
+                selected: this.state.subjectNotFound ? 0 : null,
+                enabled: this.state.subjectNotFound,
+                arrayCombo: this.state.subject.arrayCombo
+            }  
+        });
+
+        if(!this.state.subjectNotFound){
+            this.props.navigation.state.params.createDemands.problemId = null;
+        }
+        else{
+            this.props.navigation.state.params.createDemands.problemId = 0;
         }
     }
 
@@ -417,7 +443,8 @@ export class DemandsDetailScreen extends Component{
         this.setState({
             level: {
                 levelId: itemValue,
-                enabled: this.state.level.enabled
+                enabled: this.state.level.enabled,
+                arrayCombo: this.state.level.arrayCombo
             }
         });
 
@@ -496,9 +523,12 @@ export class DemandsDetailScreen extends Component{
         })
 
         this.props.navigation.state.params.createDemands.forecast = '';
-
+        
         if(itemValue != 0){
-            this.props.navigation.state.params.createDemands.clientHelpDeskId = clientInList.clientHelpDeskId;
+
+            if(clientInList != null){
+                this.props.navigation.state.params.createDemands.clientHelpDeskId = clientInList.clientHelpDeskId;
+            }
 
             this.setState({
                 category: {
@@ -542,62 +572,68 @@ export class DemandsDetailScreen extends Component{
             })
 
             let crudService = new CrudService();
-    
-            let resultContacts = await crudService.get(`comboDemands/getComboContact/${clientInList.clientHelpDeskId}`, this.state.data.userData.token);
+            let resultAreas;
+
+            if(this.state.data.userData.userData.userType == 1){
+                let resultContacts = await crudService.get(`comboDemands/getComboContact/${clientInList.clientHelpDeskId}`, this.state.data.userData.token);
             
-            if(resultContacts.status == 200){
-                this.setState({
-                    contact: {
-                        array: [...resultContacts.data],
-                        selected: this.state.contact.selected,
-                        enabled: this.state.contact.enabled
-                    }
-                }, this.populateContact);
-            }
-            else if(resultContacts.status == 401){
-                Alert.alert(
-                    "Sessão Expirada",
-                    "Sua sessão expirou. Por favor, realize o login novamente.",
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => this.props.navigation.navigate('LoginEmail'),
-                            style: "ok"
+                if(resultContacts.status == 200){
+                    this.setState({
+                        contact: {
+                            array: [...resultContacts.data],
+                            selected: this.state.contact.selected,
+                            enabled: this.state.contact.enabled
                         }
-                    ],
-                    { cancelable: false }
-                );
-            }
-            else if(resultContacts.status == 400){
-                Alert.alert(
-                    "Erro",
-                    resultContacts.data[0],
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsList'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
+                    }, this.populateContact);
+                }
+                else if(resultContacts.status == 401){
+                    Alert.alert(
+                        "Sessão Expirada",
+                        "Sua sessão expirou. Por favor, realize o login novamente.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('LoginEmail'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else if(resultContacts.status == 400){
+                    Alert.alert(
+                        "Erro",
+                        resultContacts.data[0],
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('DemandsList'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else{
+                    Alert.alert(
+                        "Erro",
+                        "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('DemandsList'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+
+                resultAreas = await crudService.get(`comboDemands/getComboArea?clientHelpDeskId=${clientInList.clientHelpDeskId}&PersonId=${this.state.data.userData.userData.personId}&UserType=${this.state.data.userData.userData.userType}`, this.state.data.userData.token);
             }
             else{
-                Alert.alert(
-                    "Erro",
-                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                    [
-                        {
-                            text: "Ok",
-                            onPress: () => this.props.navigation.navigate('DemandsList'),
-                            style: "ok"
-                        }
-                    ],
-                    { cancelable: false }
-                );
+                resultAreas = await crudService.get(`comboDemands/getComboArea?clientHelpDeskId=${this.state.data.userData.userData.clientHelpDeskId}&PersonId=${this.state.data.userData.userData.personId}&UserType=${this.state.data.userData.userData.userType}`, this.state.data.userData.token);
             }
-
-            let resultAreas = await crudService.get(`comboDemands/getComboArea?clientHelpDeskId=${clientInList.clientHelpDeskId}&PersonId=${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
             
             if(resultAreas.status == 200){
                 this.setState({
@@ -651,7 +687,14 @@ export class DemandsDetailScreen extends Component{
                 );
             }
 
-            let resultProducts = await crudService.get(`comboDemands/getComboProduct/${itemValue}`, this.state.data.userData.token);
+            let resultProducts;
+
+            if(this.state.data.userData.userData.userType == 1){
+                resultProducts = await crudService.get(`comboDemands/getComboProduct/${itemValue}`, this.state.data.userData.token);
+            }
+            else{
+                resultProducts = await crudService.get(`comboDemands/getComboProduct/${this.state.data.userData.userData.clientId}`, this.state.data.userData.token);
+            }
                 
             if(resultProducts.status == 200){
                 this.setState({
@@ -1117,7 +1160,7 @@ export class DemandsDetailScreen extends Component{
         else{
             enable = false;
         }
-        
+
         this.setState({
             subject: {
                 array: [...this.state.subject.array],
@@ -1125,6 +1168,21 @@ export class DemandsDetailScreen extends Component{
                 selected: itemValue, 
                 arrayCombo: [...this.state.subject.arrayCombo]   
             }     
+        }, () => {
+            if(itemValue == null){
+                this.setState({
+                    subject: {
+                        array: [...this.state.subject.array],
+                        enabled: this.state.subject.enabled,
+                        selected: this.state.subject.selected, 
+                        arrayCombo: [
+                            <Picker.Item key={null} value={null} label={`NÃO DEFINIDO!`} />,
+                            ...this.state.subject.arrayCombo
+                        ]   
+                    },
+                    sla: "Não definido!"     
+                });
+            }
         });
 
         this.props.navigation.state.params.createDemands.problemId = itemValue;
@@ -1461,7 +1519,7 @@ export class DemandsDetailScreen extends Component{
 
     showFinishingUser = () => {
         
-        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
+        if(this.state.data.userData.userData.userType == 1 && this.state.data.demandsId != undefined && this.state.dataDemands != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
             return  <>
                         <Text style={{marginBottom:5}}>Finalizado Por:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -1475,7 +1533,7 @@ export class DemandsDetailScreen extends Component{
 
     showTotalService = () => {
         
-        if(this.state.data.demandsId != undefined && this.state.dataDemands != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
+        if(this.state.data.userData.userData.userType == 1 && this.state.data.demandsId != undefined && this.state.dataDemands != undefined && (this.state.dataDemands.statusId == 70 || this.state.dataDemands.statusId == 60)){
             return  <>
                         <Text style={{marginBottom:5, marginTop:10}}>Tempo de Duração:</Text>
                         <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -1768,6 +1826,11 @@ export class DemandsDetailScreen extends Component{
         let result = await crudService.get(`comboDemands/getComboAreaForward/${clientInList.clientHelpDeskId}`, this.state.data.userData.token);
         
         if(result.status == 200){
+
+            if(this.state.subject.selected == null){
+                this.state.subject.arrayCombo.shift();
+            }
+
             this.setState({
                 area:{
                     array: [...result.data],
@@ -1955,12 +2018,14 @@ export class DemandsDetailScreen extends Component{
                     </TouchableWithoutFeedback>
         }
         else{
-            return  <TouchableWithoutFeedback onPress={() => this.RBSheet2.open()}>
-                        <Icons
-                            name='plus' 
-                            style={{fontSize: 20, color: "white"}}
-                        /> 
-                    </TouchableWithoutFeedback>
+            if(this.state.data.userData.userData.userType == 1){
+                return  <TouchableWithoutFeedback onPress={() => this.RBSheet2.open()}>
+                            <Icons
+                                name='plus' 
+                                style={{fontSize: 20, color: "white"}}
+                            /> 
+                        </TouchableWithoutFeedback>
+            }
         }
     }
 
@@ -2337,7 +2402,8 @@ export class DemandsDetailScreen extends Component{
             updateSupportLevel: false,
             level: {
                 levelId: this.state.level.levelId,
-                enabled: false
+                enabled: false,
+                arrayCombo: this.state.level.arrayCombo
             },
             isLoading: true
         });
@@ -2428,6 +2494,10 @@ export class DemandsDetailScreen extends Component{
     editDemandsFunction = () => {
 
         this.RBSheet2.close();
+
+        if(this.state.subject.selected == null){
+            this.state.subject.arrayCombo.shift();
+        }
 
         this.setState({
             editDemands: true,
@@ -2684,12 +2754,19 @@ export class DemandsDetailScreen extends Component{
     }
 
     changeSupportLevel = async () => {
+        
+        if(this.state.dataDemands.supportLevelId == 0){
+            while(this.state.level.arrayCombo.length > 3){
+                this.state.level.arrayCombo.shift();
+            }
+        }
 
         this.setState({
             updateSupportLevel: true,
             level: {
                 levelId: this.state.level.levelId,
-                enabled: true
+                enabled: true,
+                arrayCombo: this.state.level.arrayCombo
             },
         });
         
@@ -2742,6 +2819,11 @@ export class DemandsDetailScreen extends Component{
         
         this.props.navigation.state.params.createDemands.term = label.name;
         
+        if(this.props.navigation.state.params.userData.userData.userType == 2){
+            
+            this.props.navigation.state.params.createDemands.contactId = this.props.navigation.state.params.userData.userData.contactClientHelpDeskId;
+        }
+
         let data = new FormData();
         data.append('Request', JSON.stringify(this.props.navigation.state.params.createDemands));
 
@@ -2763,17 +2845,33 @@ export class DemandsDetailScreen extends Component{
             this.props.navigation.state.params.createDemands.demandsId = result.data.demandsId;
             await this.commonDidMount();
 
-            Alert.alert(
-                "Cadastrado com Sucesso.",
-                `${label.name} ${result.data.codeId} criado com sucesso.`,
-                [
-                    {
-                        text: "Ok",
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
+            if(this.props.navigation.state.params.userData.userData.userType == 2){
+                Alert.alert(
+                    "Cadastrado com Sucesso.",
+                    `Você criou um novo ${label.name} de número: ${result.data.codeId}. Recebemos um email e breve o atenderemos.`,
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsDetail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Cadastrado com Sucesso.",
+                    `${label.name} ${result.data.codeId} criado com sucesso.`,
+                    [
+                        {
+                            text: "Ok",
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
         }
         else if(result.status == 401){
             this.setState({
@@ -2834,59 +2932,67 @@ export class DemandsDetailScreen extends Component{
 
         let crudService = new CrudService();
         
-        let resultClients = await crudService.get(`comboDemands/getComboClients/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
+        if(this.state.data.userData.userData.userType == 1){
+            let resultClients = await crudService.get(`comboDemands/getComboClients/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
         
-        if(resultClients.status == 200){
-            this.setState({
-                client: {
-                    array: [...resultClients.data],
-                    selected: this.state.client.selected,
-                    enabled: true,
-                    arrayCombo: this.state.client.arrayCombo
-                }
-            }, this.populateClient);
-        }
-        else if(resultClients.status == 401){
-            Alert.alert(
-                "Sessão Expirada",
-                "Sua sessão expirou. Por favor, realize o login novamente.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('LoginEmail'),
-                        style: "ok"
+            if(resultClients.status == 200){
+                this.setState({
+                    client: {
+                        array: [...resultClients.data],
+                        selected: this.state.client.selected,
+                        enabled: true,
+                        arrayCombo: this.state.client.arrayCombo
                     }
-                ],
-                { cancelable: false }
-            );
-        }
-        else if(resultClients.status == 400){
-            Alert.alert(
-                "Erro",
-                resultClients.data[0],
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
+                }, this.populateClient);
+            }
+            else if(resultClients.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(resultClients.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultClients.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('DemandsList'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
         }
         else{
-            Alert.alert(
-                "Erro",
-                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
+            if(this.state.data.demandsId == undefined && this.props.navigation.state.params.createDemands.clientHelpDeskId == undefined){
+                this.props.navigation.state.params.createDemands.clientHelpDeskId = this.state.data.userData.userData.clientHelpDeskId;
+                this.changeClient(this.state.data.userData.userData.clientHelpDeskId);
+            }
         }
 
         let resultPriority = await crudService.get(`comboDemands/getComboPriority/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
@@ -3004,7 +3110,8 @@ export class DemandsDetailScreen extends Component{
                     },
                     level: {
                         levelId: getDemands.data.supportLevelId,
-                        enabled: false
+                        enabled: false,
+                        arrayCombo: this.state.level.arrayCombo
                     },
                     products: {
                         listProducts: this.state.products.listProducts,
@@ -3252,13 +3359,28 @@ export class DemandsDetailScreen extends Component{
             },
             level: {
                 levelId: this.state.level.levelId,
-                enabled: false
+                enabled: false,
+                arrayCombo: this.state.level.arrayCombo
             },
             switch: {
                 isEnabled: this.state.switch.isEnabled,
                 disabled: true
             },
             isLoading: false
+        }, () => {
+            
+            if(this.state.dataDemands.supportLevelId == 0){
+                this.setState({
+                    level: {
+                        levelId: this.state.level.levelId,
+                        enabled: this.state.level.enabled,
+                        arrayCombo: [
+                            <Picker.Item key={0} value={0} label="NENHUM" />,
+                            ...this.state.level.arrayCombo
+                        ]
+                    },
+                })
+            }
         });
     }
 
@@ -3307,31 +3429,35 @@ export class DemandsDetailScreen extends Component{
                                             {this.showCreatedBy()}
                                             {this.showResponsibleOperator()}
                                             
-                                            <Text style={{marginBottom:5}}>Cliente:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
-                                                <Picker
-                                                    enabled={this.state.client.enabled}
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.client.selected}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeClient(itemValue)
-                                                    }>
-                                                    {this.state.client.arrayCombo}
-                                                </Picker>
-                                            </View>
-                
-                                            <Text style={{marginBottom:5}}>Contato Cliente:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
-                                                <Picker
-                                                    enabled={this.state.contact.enabled}
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.contact.selected}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeContact(itemValue)
-                                                    }>
-                                                    {this.state.contact.arrayCombo}
-                                                </Picker>
-                                            </View>
+                                            {this.state.data.userData.userData.userType == 1 && (
+                                                <>
+                                                    <Text style={{marginBottom:5}}>Cliente:</Text>
+                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
+                                                        <Picker
+                                                            enabled={this.state.client.enabled}
+                                                            style={pickerStyle}
+                                                            selectedValue={this.state.client.selected}
+                                                            onValueChange={(itemValue, itemIndex) =>
+                                                                this.changeClient(itemValue)
+                                                            }>
+                                                            {this.state.client.arrayCombo}
+                                                        </Picker>
+                                                    </View>
+                        
+                                                    <Text style={{marginBottom:5}}>Contato Cliente:</Text>
+                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
+                                                        <Picker
+                                                            enabled={this.state.contact.enabled}
+                                                            style={pickerStyle}
+                                                            selectedValue={this.state.contact.selected}
+                                                            onValueChange={(itemValue, itemIndex) =>
+                                                                this.changeContact(itemValue)
+                                                            }>
+                                                            {this.state.contact.arrayCombo}
+                                                        </Picker>
+                                                    </View>
+                                                </>
+                                            )}
                 
                                             <Text style={{marginBottom:5}}>Prioridade:</Text>
                                             <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
@@ -3384,64 +3510,82 @@ export class DemandsDetailScreen extends Component{
                                                     {this.state.subject.arrayCombo}
                                                 </Picker>
                                             </View>
-                
-                                            <Text style={{marginBottom:5}}>Status:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                                <Picker
-                                                    enabled={this.state.status.enabled}
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.status.statusId}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeStatus(itemValue)
-                                                    }>
-                                                    {this.state.status.arrayCombo}
-                                                </Picker>
-                                            </View>
-                
-                                            <Text style={{marginBottom:5}}>Nível Suporte:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                                <Picker
-                                                    enabled={this.state.level.enabled}
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.level.levelId}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeLevel(itemValue)
-                                                    }>
-                                                    <Picker.Item key={1} value={1} label="NIVEL 1" />
-                                                    <Picker.Item key={2} value={2} label="NIVEL 2" />
-                                                    <Picker.Item key={3} value={3} label="NIVEL 3" />
-                                                </Picker>
-                                            </View>
+                                            
+                                            {(this.state.data.userData.userData.userType == 2 && this.state.data.demandsId == undefined) && (
+                                                <CheckBox
+                                                    title='Não encontrei o assunto nessa lista!'
+                                                    checked={this.state.subjectNotFound}
+                                                    onPress={() => this.pressSubjectNotFound()}
+                                                />
+                                            )}
+                                            
+                                            {((this.state.data.userData.userData.userType == 1) || (this.state.data.userData.userData.userType == 2 && this.state.data.demandsId != undefined)) && (
+                                                <>
+                                                    <Text style={{marginBottom:5}}>Status:</Text>
+                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                        <Picker
+                                                            enabled={this.state.status.enabled}
+                                                            style={pickerStyle}
+                                                            selectedValue={this.state.status.statusId}
+                                                            onValueChange={(itemValue, itemIndex) =>
+                                                                this.changeStatus(itemValue)
+                                                            }>
+                                                            {this.state.status.arrayCombo}
+                                                        </Picker>
+                                                    </View>
+                                                </>
+                                            )}
+                                            
+                                            {this.state.data.userData.userData.userType == 1 && (
+                                                <>
+                                                    <Text style={{marginBottom:5}}>Nível Suporte:</Text>
+                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                        <Picker
+                                                            enabled={this.state.level.enabled}
+                                                            style={pickerStyle}
+                                                            selectedValue={this.state.level.levelId}
+                                                            onValueChange={(itemValue, itemIndex) =>
+                                                                this.changeLevel(itemValue)
+                                                            }>
+                                                            {this.state.level.arrayCombo}
+                                                        </Picker>
+                                                    </View>
+                                                </>
+                                            )}
 
                                             <Text style={{marginBottom:10, fontSize: 20, fontWeight: "bold"}}>SLA: {this.state.sla}</Text>
                                             
-                                            <DateTimePickerModal
-                                                isVisible={this.state.isDatePickerVisible}
-                                                onConfirm={this.handleConfirm}
-                                                onCancel={this.hideDatePicker}
-                                                mode={'datetime'}
-                                                is24Hour={true}
-                                            />
+                                            {this.state.data.userData.userData.userType == 1 && (
+                                                <>
+                                                    <DateTimePickerModal
+                                                        isVisible={this.state.isDatePickerVisible}
+                                                        onConfirm={this.handleConfirm}
+                                                        onCancel={this.hideDatePicker}
+                                                        mode={'datetime'}
+                                                        is24Hour={true}
+                                                    />
 
-                                            <Text style={{marginBottom:5}}>Data Prevista:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                                <TouchableOpacity onPress={() => this.showPicker()}>
-                                                    <TextInput style={styles.input} 
-                                                        editable={false}
-                                                        value={this.state.expectedDateTime}/>
-                                                </TouchableOpacity>
-                                            </View>
-                                            <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
-                                                <Text>Sem Data Prevista:</Text>
-                                                <Switch
-                                                    disabled={this.state.switch.disabled}
-                                                    trackColor={{ false: "#767577", true: COLORS.default }}
-                                                    thumbColor={this.state.switch.isEnabled ? "#f5dd4b" : "#f4f3f4"}
-                                                    ios_backgroundColor="#3e3e3e"
-                                                    onValueChange={this.toggleSwitch}
-                                                    value={this.state.switch.isEnabled}
-                                                />
-                                            </View>
+                                                    <Text style={{marginBottom:5}}>Data Prevista:</Text>
+                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                        <TouchableOpacity onPress={() => this.showPicker()}>
+                                                            <TextInput style={styles.input} 
+                                                                editable={false}
+                                                                value={this.state.expectedDateTime}/>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
+                                                        <Text>Sem Data Prevista:</Text>
+                                                        <Switch
+                                                            disabled={this.state.switch.disabled}
+                                                            trackColor={{ false: "#767577", true: COLORS.default }}
+                                                            thumbColor={this.state.switch.isEnabled ? "#f5dd4b" : "#f4f3f4"}
+                                                            ios_backgroundColor="#3e3e3e"
+                                                            onValueChange={this.toggleSwitch}
+                                                            value={this.state.switch.isEnabled}
+                                                        />
+                                                    </View>
+                                                </>
+                                            )}
 
                                             {this.showTotalService()}
                                             {this.showEndDate()}
@@ -3450,14 +3594,25 @@ export class DemandsDetailScreen extends Component{
                                             <Text h4 style={{marginBottom:10, marginTop: 20}}>Equipamento:</Text>
                                             {this.state.products.selected}
                                             
-                                            <View style={{marginTop:10, marginBottom:10}}>
-                                                <TouchableOpacity onPress={() => this.RBSheet.open()}>
-                                                    <Text>{this.state.products.selectOrChange} o equipamento</Text>
-                                                </TouchableOpacity>
-                                            </View>
+                                            {
+                                                (this.state.data.userData.userData.userType == 1 ||
+                                                (this.state.data.demandsId == undefined && 
+                                                 this.state.dataDemands == undefined)) && 
+                                                (
+                                                    <View style={{marginTop:10, marginBottom:10}}>
+                                                        <TouchableOpacity onPress={() => this.RBSheet.open()}>
+                                                            <Text>{this.state.products.selectOrChange} o equipamento</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                )
+                                            }
                                                 
                                             <Text h4 style={{marginTop: 10}}>Anexos:</Text>
                                             {this.state.attachmentsList}
+                                            {this.state.attachmentsList.length == 0 && 
+                                            (
+                                                <Text style={{marginTop:10}}>Nenhum anexo.</Text>
+                                            )}
                                             
                                             {
                                                 this.state.data.demandsId == undefined && 
@@ -3591,7 +3746,7 @@ export class DemandsDetailScreen extends Component{
     async componentDidMount(){
         
         this.props.navigation.addListener('willFocus', async (route) => { 
-            console.log(this.props.navigation.state.params)
+            
             this.setState({
                 isLoading: true
             });

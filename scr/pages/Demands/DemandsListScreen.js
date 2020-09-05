@@ -94,14 +94,44 @@ export default function DemandsListScreen(props){
 				loading: refreshing == true ? false : true,
 			})
 			
-			let result = await crudService.get(`demands?SignatureId=${data.userData.signatureId}&PersonId=${data.userData.personId}&Page=${listDemands.page}`, data.token);
-			
+			let result;
+
+			if(data.userData.userType == 1){
+				result = await crudService.get(`demands?SignatureId=${data.userData.signatureId}&PersonId=${data.userData.personId}&Page=${listDemands.page}`, data.token);
+			}
+			else{
+				result = await crudService.get(`demands/GetDemandsFilter?text=&Client=${data.userData.clientHelpDeskId}&SignatureId=${data.userData.signatureId}&PersonId=${data.userData.personId}&Page=${listDemands.page}&UserType=2`, data.token);
+			}
+
 			if(result.status == 200){
 				setListDemands({
 					data: [...listDemands.data, ...result.data],
 					page: listDemands.page + 25,
 					loading: false,
 				})	
+			}
+			else if(result.status == 204){
+				setListDemands({
+					data: [...listDemands.data],
+					page: listDemands.page,
+					loading: false,
+				})	
+
+				let label = data.labels.find((lbl) => {
+					return lbl.typeLabel == 1
+				});
+
+				Alert.alert(
+                    `Sem ${label.name}`,
+                    `Ainda não há nenhum ${label.name} para ser listado.`,
+                    [
+                        {
+                            text: "Ok",
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
 			}
 			else if(result.status == 401){
                 Alert.alert(
@@ -138,7 +168,7 @@ export default function DemandsListScreen(props){
                     [
                         {
                             text: "Ok",
-                            onPress: () => this.props.navigation.navigate('Home'),
+                            onPress: () => props.navigation.navigate('Home'),
                             style: "ok"
                         }
                     ],
@@ -195,6 +225,33 @@ export default function DemandsListScreen(props){
 		});
 	}
 
+	const showQrAndDemandsDetail = (actionsButtons) => {
+		
+		let label = data.labels.find((lbl) => {
+			return lbl.typeLabel == 1
+		});
+
+		actionsButtons.push(
+			<ActionButton.Item
+				buttonColor="#fb8c00"
+				title="QrCode"
+				onPress={() => props.navigation.navigate("QrCode")}
+			>
+				<Icon name='qrcode' style={styles.actionButtonIcon} />
+			</ActionButton.Item>
+		);
+
+		actionsButtons.push(
+			<ActionButton.Item
+				buttonColor="#9b59b6"
+				title={`Novo ${label.name}`}
+				onPress={() => props.navigation.navigate("DemandsDetail", {userData: data, createDemands: {}})}
+			>
+				<Icon name='plus' style={styles.actionButtonIcon} />
+			</ActionButton.Item>
+		);
+	}
+
 	const listActionsButtons = () => {
 
 		let actionsButtons = [];
@@ -209,33 +266,14 @@ export default function DemandsListScreen(props){
 		)
 
 		data.permissionAndMenu.forEach((menu, index) => {
-			if((data.userData.userType == 1 && menu.menuId == 26) || data.userData.userType == 2){
-
-				let label = data.labels.find((lbl) => {
-					return lbl.typeLabel == 1
-				});
-
-				actionsButtons.push(
-					<ActionButton.Item
-						buttonColor="#fb8c00"
-						title="QrCode"
-						onPress={() => props.navigation.navigate("QrCode")}
-					>
-						<Icon name='qrcode' style={styles.actionButtonIcon} />
-					</ActionButton.Item>
-				);
-
-				actionsButtons.push(
-					<ActionButton.Item
-						buttonColor="#9b59b6"
-						title={`Novo ${label.name}`}
-						onPress={() => props.navigation.navigate("DemandsDetail", {userData: data, createDemands: {}})}
-					>
-						<Icon name='plus' style={styles.actionButtonIcon} />
-					</ActionButton.Item>
-				);
+			if(data.userData.userType == 1 && menu.menuId == 26){
+				showQrAndDemandsDetail(actionsButtons);
 			}
 		});
+
+		if(data.userData.userType == 2){
+			showQrAndDemandsDetail(actionsButtons);
+		}
 
 		return actionsButtons;
 	}
@@ -251,7 +289,7 @@ export default function DemandsListScreen(props){
 		{label: 'Previsão', value: 1 }
 	];
 
-	if(havePermission){
+	if(havePermission || data.userData.userType == 2){
 		
 		let label = data.labels.find((lbl) => {
 			return lbl.typeLabel == 1

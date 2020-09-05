@@ -184,45 +184,51 @@ class MyListItem extends PureComponent {
         textInteraction = this.props.interaction.comment.split("\\r\\n").join("{'\\n'}");
         textInteraction = textInteraction.split("<br />").join("\n");
 
-        if (this.props.interaction.userTypeId != 1) {
-            render = <View style={{ marginBottom:5 }}>
-                        <View style={{flexDirection: 'row', marginLeft:15, marginTop:15}}>
-                            <View style={{flex:1}}>
-                                <Avatar size="medium" rounded title={initials} />                        
+        let canViewPrivate = this.props.userData.permissionAndMenu.find(permission => {
+            return permission.menuId == 180;
+        });
+
+        if (this.props.interaction.userTypeId != 1 && !this.props.interaction.private) {
+            render =    <View style={{ marginBottom:5 }}>
+                            <View style={{flexDirection: 'row', marginLeft:15, marginTop:15}}>
+                                <View style={{flex:1}}>
+                                    <Avatar size="medium" rounded title={initials} />                        
+                                </View>
+                                <View style={{flex:5, justifyContent:'center'}}>
+                                    <Text style={{fontSize:15, fontWeight: 'bold'}}>{this.props.interaction.private ? `${this.props.interaction.name} (Privado)` : `${this.props.interaction.name}`}</Text>
+                                    <Text style={{fontSize:10, fontWeight: 'bold'}}>{email}</Text>
+                                    <Text style={{fontSize:10, fontWeight: 'bold'}}>{moment(this.props.interaction.dateHour).format("DD/MM/YYYY HH:mm")}</Text>
+                                </View>
                             </View>
-                            <View style={{flex:5, justifyContent:'center'}}>
-                                <Text style={{fontSize:15, fontWeight: 'bold'}}>{this.props.interaction.private ? `${this.props.interaction.name} (Privado)` : `${this.props.interaction.name}`}</Text>
-                                <Text style={{fontSize:10, fontWeight: 'bold'}}>{email}</Text>
-                                <Text style={{fontSize:10, fontWeight: 'bold'}}>{moment(this.props.interaction.dateHour).format("DD/MM/YYYY HH:mm")}</Text>
-                            </View>
-                        </View>
-                        <TouchableOpacity onLongPress={() => this.pressInteraction()}>
-                            <Card containerStyle={{borderRadius:15, backgroundColor:this.state.color}}>
-                                <Text style={{fontSize:15}}>{textInteraction}</Text>
-                                {this.attachmentsInteraction()}
-                            </Card>
-                        </TouchableOpacity>
-                    </View> 
+                            <TouchableOpacity>
+                                <Card containerStyle={{borderRadius:15, backgroundColor:this.state.color}}>
+                                    <Text style={{fontSize:15}}>{textInteraction}</Text>
+                                    {this.attachmentsInteraction()}
+                                </Card>
+                            </TouchableOpacity>
+                        </View> 
         }
-        else{
-            render = <View style={{ marginBottom:5 }}>
-                        <View style={{flexDirection: 'row-reverse', marginStart:8, marginTop:15}}>
-                            <View style={{flex:1}}>
-                                <Avatar size="medium" rounded title={initials} />                        
+        else if(this.props.interaction.userTypeId == 1){
+            if(!this.props.interaction.private || (this.props.interaction.private && canViewPrivate != null)){
+                render =    <View style={{ marginBottom:5 }}>
+                                <View style={{flexDirection: 'row-reverse', marginStart:8, marginTop:15}}>
+                                    <View style={{flex:1}}>
+                                        <Avatar size="medium" rounded title={initials} />                        
+                                    </View>
+                                    <View style={{flex:5, justifyContent:'center', alignItems:'flex-end', marginRight:15}}>
+                                        <Text style={{fontSize:15, fontWeight: 'bold'}}>{this.props.interaction.private ? `${this.props.interaction.name} (Privado)` : `${this.props.interaction.name}`}</Text>
+                                        <Text style={{fontSize:10, fontWeight: 'bold'}}>{email}</Text>
+                                        <Text style={{fontSize:10, fontWeight: 'bold'}}>{moment(this.props.interaction.dateHour).format("DD/MM/YYYY HH:mm")}</Text>
+                                    </View>
+                                </View>
+                                <TouchableOpacity onLongPress={() => this.pressInteraction()}>
+                                    <Card containerStyle={{borderRadius:15, backgroundColor:this.state.color}}>
+                                        <Text style={{fontSize:15}}>{textInteraction}</Text>
+                                        {this.attachmentsInteraction()}
+                                    </Card>
+                                </TouchableOpacity>
                             </View>
-                            <View style={{flex:5, justifyContent:'center', alignItems:'flex-end', marginRight:15}}>
-                                <Text style={{fontSize:15, fontWeight: 'bold'}}>{this.props.interaction.private ? `${this.props.interaction.name} (Privado)` : `${this.props.interaction.name}`}</Text>
-                                <Text style={{fontSize:10, fontWeight: 'bold'}}>{email}</Text>
-                                <Text style={{fontSize:10, fontWeight: 'bold'}}>{moment(this.props.interaction.dateHour).format("DD/MM/YYYY HH:mm")}</Text>
-                            </View>
-                        </View>
-                        <TouchableOpacity onLongPress={() => this.pressInteraction()}>
-                            <Card containerStyle={{borderRadius:15, backgroundColor:this.state.color}}>
-                                <Text style={{fontSize:15}}>{textInteraction}</Text>
-                                {this.attachmentsInteraction()}
-                            </Card>
-                        </TouchableOpacity>
-                    </View>
+            }
         }
 		return (
 			<>
@@ -402,7 +408,7 @@ export default function ListInteractionsScreen(props){
                         [
                             {
                                 text: "Ok",
-                                onPress: () => this.props.navigation.navigate('DemandsList'),
+                                onPress: () => props.navigation.navigate('DemandsList'),
                                 style: "ok"
                             }
                         ],
@@ -757,6 +763,11 @@ export default function ListInteractionsScreen(props){
 
         props.navigation.state.params.createDemands.term = label.name;
 
+        if(props.navigation.state.params.userData.userData.userType == 2){
+            
+            props.navigation.state.params.createDemands.contactId = props.navigation.state.params.userData.userData.contactClientHelpDeskId;
+        }
+
         let objSend = {...props.navigation.state.params.createDemands};
         delete objSend.filesSend;
 
@@ -782,18 +793,34 @@ export default function ListInteractionsScreen(props){
             setRefreshing(false);
             setIsLoading(false);
 
-            Alert.alert(
-                "Cadastrado com Sucesso.",
-                `${label.name} ${result.data.codeId} criado com sucesso.`,
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => props.navigation.navigate('DemandsDetail', {demandsId: result.data.demandsId}),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
+            if(props.navigation.state.params.userData.userData.userType == 2){
+                Alert.alert(
+                    "Cadastrado com Sucesso.",
+                    `Você criou um novo ${label.name} de número: ${result.data.codeId}. Recebemos um email e breve o atenderemos.`,
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('DemandsDetail', {demandsId: result.data.demandsId}),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Cadastrado com Sucesso.",
+                    `${label.name} ${result.data.codeId} criado com sucesso.`,
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('DemandsDetail', {demandsId: result.data.demandsId}),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
         }
         else if(result.status == 401){
             setIsLoading(false);
@@ -856,15 +883,21 @@ export default function ListInteractionsScreen(props){
     const pressSendInteraction = async () => {
 
         if(!isEdit){
-            let canComment = props.navigation.state.params.userData.permissionAndMenu.find(permission => {
-                return permission.menuId == 43;
-            });
-    
-            if(canComment == null){
-                openSendDetails();
+
+            if(props.navigation.state.params.userData.userData.userType == 2){
+                saveComment(false);
             }
             else{
-                setIsModalVisible(true);
+                let canComment = props.navigation.state.params.userData.permissionAndMenu.find(permission => {
+                    return permission.menuId == 43;
+                });
+        
+                if(canComment == null){
+                    openSendDetails();
+                }
+                else{
+                    setIsModalVisible(true);
+                }
             }
         }
         else{
@@ -1031,7 +1064,7 @@ export default function ListInteractionsScreen(props){
                 [
                     {
                         text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        onPress: () => props.navigation.navigate('DemandsList'),
                         style: "ok"
                     }
                 ],
@@ -1087,7 +1120,7 @@ export default function ListInteractionsScreen(props){
                 [
                     {
                         text: "Ok",
-                        onPress: () => this.props.navigation.navigate('DemandsList'),
+                        onPress: () => props.navigation.navigate('DemandsList'),
                         style: "ok"
                     }
                 ],
@@ -1098,7 +1131,17 @@ export default function ListInteractionsScreen(props){
 
     const showSendButton = () => {
         
-        if(props.navigation.state.params.createDemands.getDemands != undefined && !props.navigation.state.params.createDemands.finishDemands){
+        if(props.navigation.state.params.userData.userData.userType == 2 && props.navigation.state.params.createDemands.getDemands != undefined){
+            return (
+                <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
+                    <Icon
+                        name='send'
+                        color='#000'
+                        onPress={() => pressSendInteraction()} />
+                </View>
+            )
+        }
+        else if(props.navigation.state.params.createDemands.getDemands != undefined && !props.navigation.state.params.createDemands.finishDemands){
 
             let status = props.navigation.state.params.createDemands.getDemands.statusId;
 
@@ -1117,7 +1160,17 @@ export default function ListInteractionsScreen(props){
 
     const showAttachmentButton = () => {
         
-        if(props.navigation.state.params.createDemands.getDemands != undefined && !props.navigation.state.params.createDemands.finishDemands){
+        if(props.navigation.state.params.userData.userData.userType == 2 && props.navigation.state.params.createDemands.getDemands != undefined){
+            return (
+                <View style={{flex:1, justifyContent: 'center', alignItems: 'center'}}>
+                    <Icon
+                        name='attachment'
+                        color='#000'
+                        onPress={() => openPicker()} />
+                </View>
+            )
+        }
+        else if(props.navigation.state.params.createDemands.getDemands != undefined && !props.navigation.state.params.createDemands.finishDemands){
 
             let status = props.navigation.state.params.createDemands.getDemands.statusId;
 
@@ -1337,11 +1390,15 @@ export default function ListInteractionsScreen(props){
         });
     }
 
-    const saveComment = async () => {
+    const saveComment = async (isPrivate) => {
 
         let demandsId = props.navigation.state.params.demandsId != undefined ? props.navigation.state.params.demandsId : props.navigation.state.params.createDemands.demandsId;
         setIsLoading(true);
         setIsModalVisible(false);
+
+        let label = props.navigation.state.params.userData.labels.find((lbl) => {
+            return lbl.typeLabel == 1
+        });
 
         let crudService = new CrudService();
 
@@ -1350,12 +1407,13 @@ export default function ListInteractionsScreen(props){
             signatureId: props.navigation.state.params.userData.userData.signatureId,
             userHelpDeskId: props.navigation.state.params.userData.userData.userHelpDeskId,
             userType: props.navigation.state.params.userData.userData.userType,
-            private: true,
+            private: isPrivate,
             comment: interaction,
             serviceType: 0,
             attendanceTime: "0:0",
             showDescription: false,
-            sendEmail: false
+            sendEmail: false,
+            term: label.name
         };
         
         var data = new FormData();
@@ -1374,18 +1432,34 @@ export default function ListInteractionsScreen(props){
             getInteractions();
             setRefreshing(false);
 
-            Alert.alert(
-                "Cadastrado com Sucesso.",
-                `Comentário criado com sucesso.`,
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => props.navigation.navigate('DemandsDetail'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
+            if(props.navigation.state.params.userData.userData.userType == 2){
+                Alert.alert(
+                    "Cadastrado com Sucesso.",
+                    `Foi enviado um email para a área responsável. Em breve retornaremos`,
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('DemandsDetail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Cadastrado com Sucesso.",
+                    `Comentário criado com sucesso.`,
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => props.navigation.navigate('DemandsDetail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
         }
         else if(result.status == 401){
             Alert.alert(
@@ -1510,7 +1584,7 @@ export default function ListInteractionsScreen(props){
                 let label = props.navigation.state.params.userData.labels.find((lbl) => {
                     return lbl.typeLabel == 1
                 });
-        
+
                 let createInteraction = {
                     demandsId: demandsId,
                     signatureId: props.navigation.state.params.userData.userData.signatureId,
@@ -1898,7 +1972,7 @@ export default function ListInteractionsScreen(props){
                             <View style={{backgroundColor: "white"}}>
                                 <Text style={{textAlign: "center", marginBottom:20, marginTop: 20, fontSize: 20}}>Tipo de Interação:</Text>
                                 <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-                                    <TouchableOpacity onPress={() => saveComment()}>
+                                    <TouchableOpacity onPress={() => saveComment(true)}>
                                         <Icons
                                             name='user-secret' 
                                             style={{fontSize: 50, color: "black", marginLeft: 5}}

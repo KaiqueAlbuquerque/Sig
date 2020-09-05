@@ -80,14 +80,27 @@ export default function LoginPasswordScreen(props){
                     { cancelable: false }
                 );
             }
-            else{
+            else if(result.status == 400){
                 Alert.alert(
                     "Erro",
-                    result.data,
+                    result.data[0],
                     [
                         {
                             text: "Ok",
                             onPress: () => props.navigation.navigate('LoginEmail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
                             style: "ok"
                         }
                     ],
