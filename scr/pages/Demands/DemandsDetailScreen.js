@@ -295,8 +295,9 @@ export class DemandsDetailScreen extends Component{
             });
     
             this.props.navigation.state.params.createDemands.productId = product.productId;
-    
-            this.RBSheet.close();
+            if(this.RBSheet != undefined){
+                this.RBSheet.close();
+            }
         }
         else{
             Alert.alert(
@@ -525,7 +526,7 @@ export class DemandsDetailScreen extends Component{
         this.props.navigation.state.params.createDemands.forecast = '';
         
         if(itemValue != 0){
-
+            
             if(clientInList != null){
                 this.props.navigation.state.params.createDemands.clientHelpDeskId = clientInList.clientHelpDeskId;
             }
@@ -3236,6 +3237,60 @@ export class DemandsDetailScreen extends Component{
             }
         }
         else{
+
+            if(this.props.navigation.state.params.idProduct != undefined){
+                
+                let resultProduct = await crudService.get(`products?signatureId=${this.state.data.userData.userData.signatureId}&internalCode=${this.props.navigation.state.params.idProduct}`, this.state.data.userData.token);
+        
+                if(resultProduct.status == 200){
+                    
+                    this.changeClient(resultProduct.data.clientId);
+                    this.changeProduct(resultProduct.data);
+                }
+                else if(resultProduct.status == 401){
+                    Alert.alert(
+                        "Sessão Expirada",
+                        "Sua sessão expirou. Por favor, realize o login novamente.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('LoginEmail'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else if(resultProduct.status == 400){
+                    Alert.alert(
+                        "Erro",
+                        resultProduct.data[0],
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('DemandsList'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+                else{
+                    Alert.alert(
+                        "Erro",
+                        "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                        [
+                            {
+                                text: "Ok",
+                                onPress: () => this.props.navigation.navigate('DemandsList'),
+                                style: "ok"
+                            }
+                        ],
+                        { cancelable: false }
+                    );
+                }
+            }
+
             this.setState({
                 isLoading: false
             })
