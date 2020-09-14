@@ -46,13 +46,13 @@ class MyListItem extends PureComponent {
 
         let arrayAttachments = []
         this.props.interaction.listAttachments.forEach(attachment => {
-            arrayAttachments.push(<Text onPress={() => this.downloadFile(attachment.attachmentId, this.props.userData, attachment.fileName, this.props.navigation)} style={{textDecorationLine:'underline', color: 'blue'}}>{attachment.fileName}</Text>);
+            arrayAttachments.push(<Text onPress={() => this.downloadFile(attachment.attachmentId, this.props.userData, attachment.fileName, this.props.navigation, this.props.activateLoader)} style={{textDecorationLine:'underline', color: 'blue'}}>{attachment.fileName}</Text>);
         });        
 
         return arrayAttachments;
     }
 
-    downloadFile = async (id, userData, fileName, navigation) => {
+    downloadFile = async (id, userData, fileName, navigation, activateLoader) => {
 
         const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
@@ -62,6 +62,8 @@ class MyListItem extends PureComponent {
             }
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            activateLoader(true);
+
             let crudService = new CrudService();
             let result = await crudService.get(`attachments/fileExists/${id}`, userData.token);
             
@@ -81,7 +83,7 @@ class MyListItem extends PureComponent {
                 config(options).fetch('GET', `http://sistemasig.duckdns.org:4999/sig/api/attachments?path=${result.data}`, {
                     Authorization : `Bearer ${userData.token}`
                 }).then((res) => {
-                    
+                    activateLoader(false);
                 })
                 .catch((error) => {
                     
@@ -138,6 +140,7 @@ class MyListItem extends PureComponent {
                     { cancelable: false }
                 );
             }
+            activateLoader(false);
         } 
         else {
             Alert.alert(
@@ -443,8 +446,18 @@ export default function ListInteractionsScreen(props){
             isPressed={isPressed}
             userData={props.navigation.state.params.userData}
             navigation={props.navigation}
+            activateLoader={activateLoader}
     	/>
     );
+
+    const activateLoader = (activeLoader) => {
+        if(activeLoader){
+            setIsLoading(true);
+        }
+        else{
+            setIsLoading(false);
+        }
+    }
 
     const changeBackgroundColor = (pressed, interactionId, comment, isCommentPrivate) => {
         
