@@ -305,8 +305,7 @@ export default function ListInteractionsScreen(props){
 		}
 
         props.navigation.addListener('willFocus', (route) => { 
-            console.log(props.navigation.state.params)
-
+            
             setInteractionId(0);
             setIsPressed(false);
             setCommentEdit("");

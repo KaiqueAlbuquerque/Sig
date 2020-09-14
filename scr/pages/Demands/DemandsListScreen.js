@@ -221,8 +221,13 @@ export default function DemandsListScreen(props){
 				url += `&operator=${listOperators.selected}`;
 			}
 			if(listClients.selected != null){
+				
+				let clientInList = listClients.array.find((cli) => {
+					return cli.clientId == listClients.selected;
+				});
+
 				hasFilter = true;
-				url += `&client=${listClients.selected}`;
+				url += `&client=${clientInList.clientHelpDeskId}`;
 			}
 			if(listContacts.selected != null){
 				hasFilter = true;
@@ -393,6 +398,68 @@ export default function DemandsListScreen(props){
                     ],
                     { cancelable: false }
                 );
+			}
+
+			let resultAreas = await crudService.get(`comboDemands/getComboAreaFilter/${data.userData.personId}`, data.token);
+			
+			if(resultAreas.status == 200){
+				setListAreas({
+					array: [...resultAreas.data],
+					selected: null,
+				}, () => {
+					setListAreas({
+						array: [...resultAreas.data],
+						selected: listAreas.selected,
+						arrayCombo: [
+							<Picker.Item key={null} value={null} label={`TODAS`} />,
+							resultAreas.data.map((a, i) => {
+								return <Picker.Item key={i} value={a.areaId} label={a.areaName} />
+							})
+						]
+					})
+				});
+			}
+			else if(resultAreas.status == 401){
+				Alert.alert(
+					"Sessão Expirada",
+					"Sua sessão expirou. Por favor, realize o login novamente.",
+					[
+						{
+							text: "Ok",
+							onPress: () => props.navigation.navigate('LoginEmail'),
+							style: "ok"
+						}
+					],
+					{ cancelable: false }
+				);
+			}
+			else if(resultAreas.status == 400){
+				Alert.alert(
+					"Erro",
+					resultAreas.data[0],
+					[
+						{
+							text: "Ok",
+							onPress: () => props.navigation.navigate('DemandsList'),
+							style: "ok"
+						}
+					],
+					{ cancelable: false }
+				);
+			}
+			else{
+				Alert.alert(
+					"Erro",
+					"Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+					[
+						{
+							text: "Ok",
+							onPress: () => props.navigation.navigate('DemandsList'),
+							style: "ok"
+						}
+					],
+					{ cancelable: false }
+				);
 			}
 			
 			let resultPriority = await crudService.get(`comboDemands/getComboPriority/${data.userData.signatureId}`, data.token);
@@ -748,22 +815,22 @@ export default function DemandsListScreen(props){
 	}
 
 	const changeClient = async (itemValue) => {
+
+		let clientInList = listClients.array.find((cli) => {
+			return cli.clientId == itemValue;
+		});
+		
+		setListClients({
+			array: listClients.array,
+			selected: itemValue,
+			arrayCombo: listClients.arrayCombo
+		});
 		
 		if(itemValue != null){
 			let resultContacts;
 			
             if(data.userData.userType == 1){
 
-				setListClients({
-					array: listClients.array,
-					selected: itemValue,
-					arrayCombo: listClients.arrayCombo
-				});
-
-				let clientInList = listClients.array.find((cli) => {
-					return cli.clientId == itemValue;
-				});
-				
 				setListCategory({
 					array: [...listCategory.array],
 					selected: null
@@ -789,68 +856,6 @@ export default function DemandsListScreen(props){
 						]
 					});
 				});
-	
-				let resultAreas = await crudService.get(`comboDemands/getComboArea?clientHelpDeskId=${clientInList.clientHelpDeskId}&PersonId=${data.userData.personId}&UserType=${data.userData.userType}`, data.token);
-				
-				if(resultAreas.status == 200){
-					setListAreas({
-						array: [...resultAreas.data],
-						selected: null,
-					}, () => {
-						setListAreas({
-							array: [...resultAreas.data],
-							selected: listAreas.selected,
-							arrayCombo: [
-								<Picker.Item key={null} value={null} label={`TODAS`} />,
-								resultAreas.data.map((a, i) => {
-									return <Picker.Item key={i} value={a.areaId} label={a.areaName} />
-								})
-							]
-						})
-					});
-				}
-				else if(resultAreas.status == 401){
-					Alert.alert(
-						"Sessão Expirada",
-						"Sua sessão expirou. Por favor, realize o login novamente.",
-						[
-							{
-								text: "Ok",
-								onPress: () => props.navigation.navigate('LoginEmail'),
-								style: "ok"
-							}
-						],
-						{ cancelable: false }
-					);
-				}
-				else if(resultAreas.status == 400){
-					Alert.alert(
-						"Erro",
-						resultAreas.data[0],
-						[
-							{
-								text: "Ok",
-								onPress: () => props.navigation.navigate('DemandsList'),
-								style: "ok"
-							}
-						],
-						{ cancelable: false }
-					);
-				}
-				else{
-					Alert.alert(
-						"Erro",
-						"Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-						[
-							{
-								text: "Ok",
-								onPress: () => props.navigation.navigate('DemandsList'),
-								style: "ok"
-							}
-						],
-						{ cancelable: false }
-					);
-				}
 
 				resultContacts = await crudService.get(`comboDemands/getComboContact/${clientInList.clientHelpDeskId}`, data.token);
             }
@@ -933,47 +938,6 @@ export default function DemandsListScreen(props){
 					]
 				});
 			});
-
-			if(data.userData.userType == 1){
-				setListAreas({
-					array: [],
-					selected: null
-				}, () => {
-					setListAreas({
-						array: [...listAreas.array],
-						selected: listAreas.selected,	
-						arrayCombo: [
-							<Picker.Item key={null} value={null} label={`TODAS`} />
-						]
-					});
-				});
-	
-				setListCategory({
-					array: [],
-					selected: null
-				}, () => {
-					setListCategory({
-						array: [...listCategory.array],
-						selected: listCategory.selected,	
-						arrayCombo: [
-							<Picker.Item key={null} value={null} label={`TODAS`} />
-						]
-					});
-				});
-	
-				setListSubject({
-					array: [],
-					selected: null
-				}, () => {
-					setListSubject({
-						array: [...listSubject.array],
-						selected: listSubject.selected,	
-						arrayCombo: [
-							<Picker.Item key={null} value={null} label={`TODOS`} />
-						]
-					});
-				});
-			}
 		}
 	}
 

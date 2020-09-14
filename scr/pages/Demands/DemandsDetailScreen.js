@@ -1203,6 +1203,19 @@ export class DemandsDetailScreen extends Component{
         })
     }
 
+    activateLoader = (activeLoader) => {
+        if(activeLoader){
+            this.setState({
+                isLoading: true
+            });
+        }
+        else{
+            this.setState({
+                isLoading: false
+            });
+        }
+    }
+
     insertFileGallery = () => {
         
         if(this.state.filesSend.length >= 0){
@@ -1274,6 +1287,7 @@ export class DemandsDetailScreen extends Component{
                             userData={this.state.data.userData}
                             navigation={this.props.navigation}
                             removeAttachment={this.removeAttachment}
+                            activateLoader={this.activateLoader}
                         />
             });
 
@@ -3365,6 +3379,7 @@ export class DemandsDetailScreen extends Component{
                             left={number}
                             userData={this.state.data.userData}
                             navigation={this.props.navigation}
+                            activateLoader={this.activateLoader}
                         />
             });
 

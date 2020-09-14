@@ -43,6 +43,53 @@ export default function LoginPasswordScreen(props){
         }
     }
 
+    const forgotMyPassword = async () => {
+        let crudService = new CrudService();
+        let result = await crudService.post(`auth/forgotMyPassword`, loginRequest);
+        
+        if(result.status == 200 || result.status == 204){
+            Alert.alert(
+                "E-mail enviado",
+                "A senha foi enviada para o seu email.",
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else if(result.status == 400){
+            Alert.alert(
+                "Erro",
+                result.data[0],
+                [
+                    {
+                        text: "Ok",
+                        onPress: () => props.navigation.navigate('LoginEmail'),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+        else{
+            Alert.alert(
+                "Erro",
+                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                [
+                    {
+                        text: "Ok",
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }
+    }
+
     const buttonNext = async () => { 
         let password = loginRequest.password;
         if(password == ''){
@@ -138,6 +185,12 @@ export default function LoginPasswordScreen(props){
                             <Icon size={20} name={changeIcon} color="#000" onPress={ toggleSwitch } />
                         </View>
                     </View>
+                    <TouchableOpacity
+                        activeOpacity = { .5 }
+                        onPress={ forgotMyPassword }
+                    >
+                        <Text style={{textAlign:'center'}}>Esqueci minha senha</Text>
+                    </TouchableOpacity>
                 </View>
                 <View style={styles.button}>
                     <TouchableOpacity

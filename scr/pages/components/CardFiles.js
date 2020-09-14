@@ -17,7 +17,7 @@ import RNFetchBlob from 'rn-fetch-blob';
 
 export default class CardFiles extends Component {
 
-    downloadFile = async (id, userData, fileName, navigation) => {
+    downloadFile = async (id, userData, fileName, navigation, activateLoader) => {
 
         const granted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
@@ -27,6 +27,8 @@ export default class CardFiles extends Component {
             }
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            activateLoader(true);
+            
             let crudService = new CrudService();
             let result = await crudService.get(`attachments/fileExists/${id}`, userData.token);
             
@@ -46,7 +48,7 @@ export default class CardFiles extends Component {
                 config(options).fetch('GET', `http://sistemasig.duckdns.org:4999/sig/api/attachments?path=${result.data}`, {
                     Authorization : `Bearer ${userData.token}`
                 }).then((res) => {
-                    
+                    activateLoader(false);
                 })
                 .catch((error) => {
                     
@@ -103,6 +105,7 @@ export default class CardFiles extends Component {
                     { cancelable: false }
                 );
             }
+            activateLoader(false);
         } 
         else {
             Alert.alert(
@@ -114,7 +117,7 @@ export default class CardFiles extends Component {
 
     renderCard = () => {
         if(this.props.attachment.attachmentId != undefined){
-            return  <TouchableOpacity onPress={() => this.downloadFile(this.props.attachment.attachmentId, this.props.userData, this.props.attachment.fileName, this.props.navigation)}>
+            return  <TouchableOpacity onPress={() => this.downloadFile(this.props.attachment.attachmentId, this.props.userData, this.props.attachment.fileName, this.props.navigation, this.props.activateLoader)}>
                         <View style={{ height: 130, width: 130, borderWidth: 1, borderColor: '#bdc3c7', marginLeft: this.props.left, borderRadius: 15  }}> 
                             <View style={{ flex: 2, justifyContent: "center", alignItems: "center", paddingTop: 10 }}>
                                 <Image source={this.props.imageUri}
