@@ -1,179 +1,134 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
-import { ScrollView, Dimensions } from "react-native";
+import { ScrollView, Alert } from "react-native";
 import { createMaterialBottomTabNavigator } from "react-navigation-material-bottom-tabs";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 import { Text } from "react-native-elements";
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-} from "react-native-chart-kit";
-
 import { LabelDemands, LabelCommercial } from '../Components/LabelMenu';
 
 import MenuScreen from '../Menu/MenuScreen.js';
 import DemandsListScreen from '../Demands/DemandsListScreen.js';
 import OrderListScreen from '../Commercial/OrderListScreen.js';
 
+import Line from '../Components/Charts/Line.js';
+import Bar from '../Components/Charts/Bar.js';
+import Pie from '../Components/Charts/Pie.js';
+
 import COLORS from '../../styles/Colors.js';
+import { useSelector } from 'react-redux';
+
+import CrudService from '../../services/Crud/CrudService.js';
 
 function HomeScreen(props) {
+	
+	const [listCharts, setListCharts] = useState([]);
+
+	let crudService = new CrudService();
+
+	const data = useSelector(state => state.userData);
+
+	useEffect(() => {
+		
+		async function getChartsInitial(){
+			await getCharts();
+		}
+
+		getChartsInitial();
+	}, []);
+
+	const getCharts = async () => {
+		
+		let result = await crudService.get(`kpi/${data.userData.signatureId}/${data.userData.personId}`, data.token);
+
+		if(result.status == 200){
+			setListCharts(result.data);
+		}
+		else if(result.status == 401){
+			Alert.alert(
+				"Sessão Expirada",
+				"Sua sessão expirou. Por favor, realize o login novamente.",
+				[
+					{
+						text: "Ok",
+						onPress: () => props.navigation.navigate('LoginEmail'),
+						style: "ok"
+					}
+				],
+				{ cancelable: false }
+			);
+		}
+		else if(result.status == 400){
+			Alert.alert(
+				"Erro",
+				result.data[0],
+				[
+					{
+						text: "Ok",
+						onPress: () => props.navigation.navigate('Home'),
+						style: "ok"
+					}
+				],
+				{ cancelable: false }
+			);
+		}
+		else{
+			Alert.alert(
+				"Erro",
+				"Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+				[
+					{
+						text: "Ok",
+						onPress: () => props.navigation.navigate('Home'),
+						style: "ok"
+					}
+				],
+				{ cancelable: false }
+			);
+		}
+	}
 
 	return (
 		<ScrollView>
-			<Text h3>Chamados</Text>
-			<LineChart
-				data={{
-					labels: ["January", "February", "March", "April", "May", "June"],
-					datasets: [
-						{
-							data: [
-								Math.random() * 100,
-								Math.random() * 100,
-								Math.random() * 100,
-								Math.random() * 100,
-								Math.random() * 100,
-								Math.random() * 100,
-							],
-						},
-					],
-				}}
-				width={Dimensions.get("window").width}
-				height={220}
-				yAxisLabel={"$"}
-				chartConfig={{
-					backgroundColor: "#e26a00",
-					backgroundGradientFrom: COLORS.default,
-					backgroundGradientTo: "#ffa726",
-					decimalPlaces: 2, 
-					color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-					style: {
-						borderRadius: 16,
-					},
-				}}
-				bezier
-				style={{
-					marginVertical: 8,
-					borderRadius: 16,
-				}}
-			/>
+			{
+				listCharts.map((chart) => {
+					
+					return <>
+					
+						<Text h4 style={{marginLeft: 20, marginRight: 20, marginTop:15, marginBottom: 5}}>{chart.title}</Text>
 
-			<Text h3>Equipamentos</Text>
-			<BarChart
-				data={{
-					labels: ["January", "February", "March", "April", "May", "June"],
-					datasets: [
-						{
-							data: [
-								Math.random() * 100,
-								Math.random() * 100,
-								Math.random() * 100,
-								Math.random() * 100,
-								Math.random() * 100,
-								Math.random() * 100,
-							],
-						},
-					],
-				}}
-				width={Dimensions.get("window").width}
-				height={220}
-				yAxisLabel={"$"}
-				chartConfig={{
-					backgroundColor: "#e26a00",
-					backgroundGradientFrom: COLORS.default,
-					backgroundGradientTo: "#ffa726",
-					decimalPlaces: 2, 
-					color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-					style: {
-						borderRadius: 16,
-					},
-				}}
-				bezier
-				style={{
-					marginVertical: 8,
-					borderRadius: 16,
-				}}
-			/>
+						{chart.graphicType == 0 && (
+							<Pie
+								data={chart.pieCharts}
+								height={chart.height}
+								width={chart.width}
+							/>
+						)}
 
-			<Text h3>Funcionário</Text>
-			<PieChart
-				data={[
-					{
-						name: "Seoul",
-						population: 21500000,
-						color: "rgba(131, 167, 234, 1)",
-						legendFontColor: "#7F7F7F",
-						legendFontSize: 15,
-					},
-					{
-						name: "Toronto",
-						population: 2800000,
-						color: "#F00",
-						legendFontColor: "#7F7F7F",
-						legendFontSize: 15,
-					},
-					{
-						name: "Beijing",
-						population: 527612,
-						color: "red",
-						legendFontColor: "#7F7F7F",
-						legendFontSize: 15,
-					},
-					{
-						name: "New York",
-						population: 8538000,
-						color: "#ffffff",
-						legendFontColor: "#7F7F7F",
-						legendFontSize: 15,
-					},
-					{
-						name: "Moscow",
-						population: 11920000,
-						color: "rgb(0, 0, 255)",
-						legendFontColor: "#7F7F7F",
-						legendFontSize: 15,
-					},
-				]}
-				width={Dimensions.get("window").width} 
-				height={220}
-				chartConfig={{
-					backgroundColor: "#e26a00",
-					backgroundGradientFrom: COLORS.default,
-					backgroundGradientTo: "#ffa726",
-					decimalPlaces: 2, 
-					color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-					style: {
-						borderRadius: 16,
-					},
-				}}
-				accessor="population"
-				backgroundColor="transparent"
-				paddingLeft="15"
-				absolute
-			/>
+						{chart.graphicType == 1 && (
+							<Line 
+								labels={chart.labels}
+								data={chart.data}
+								height={chart.height}
+								width={chart.width}
+							/>
+						)}
 
-			<Text h3>Dia</Text>
-			<ProgressChart
-				data={{
-					labels: ["Swim", "Bike", "Run"], 
-					data: [0.4, 0.6, 0.8],
-				}}
-				width={Dimensions.get("window").width} 
-				height={220}
-				chartConfig={{
-					backgroundColor: "#e26a00",
-					backgroundGradientFrom: COLORS.default,
-					backgroundGradientTo: "#ffa726",
-					decimalPlaces: 2, 
-					color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-					style: {
-						borderRadius: 16,
-					},
-				}}
-			/>
+						{chart.graphicType == 2 && (
+							<Bar 
+								labels={chart.labels}
+								data={chart.data.map((dataChart) => {
+									let array = [];
+									array.push(dataChart)
+									return array
+								})}
+								height={chart.height}
+								width={chart.width}
+							/>
+						)}
+					</>
+				})
+			}
 		</ScrollView>
 	);
 }
