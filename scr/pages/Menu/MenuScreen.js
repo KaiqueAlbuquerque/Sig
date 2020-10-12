@@ -30,7 +30,7 @@ export default function MenuScreen(props){
 		},
     ];
     return (
-      	<View style={{ flex: 1 }}>
+      	<View style={{ flex: 1, backgroundColor: "#fff" }}>
         	<View style={{ flex: 2 }}>
 				<Card
 					containerStyle={{

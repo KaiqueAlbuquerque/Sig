@@ -1073,7 +1073,7 @@ export default function DemandsListScreen(props){
 						}}
 					/>
 					<FlatList
-						style={{ flex: 1.8, marginBottom: 20 }}
+						style={{ flex: 1.8, marginBottom: 20, backgroundColor: "#fff" }}
 						contentContainerStyle={ styles.list }
 						data={ listDemands.data }
 						renderItem={ renderItem }

@@ -1,31 +1,40 @@
 import React, { Component } from "react";
-import { ScrollView, Dimensions } from "react-native";
-import { PieChart } from "react-native-chart-kit";
+import { View, Text } from "react-native";
+import PureChart from 'react-native-pure-chart';
 
 export default class Pie extends Component {
 
     generateChart = () => {
-
-        return  <ScrollView
-                    horizontal={true}
-                    showsHorizontalScrollIndicator={false}
-                    style={{marginLeft: 20, marginRight: 20}}
-                >
-                    <PieChart
-						data={this.props.data}
-						width={Dimensions.get("window").width + this.props.width} 
-						height={this.props.height}
-                        chartConfig={{
-                            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                        }}
-                        accessor="demands"
-                        backgroundColor="#eff3ff"
-                        absolute
+        
+        if(this.props.data.length == 0){
+            return  <View 
                         style={{
-                            borderRadius: 16,
+                            marginLeft: 20, 
+                            marginRight: 20, 
+                            marginTop: 40,
+                            flex: 1,
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}>
+                            <Text>Nenhum resgistro neste período</Text>
+                    </View>
+        }
+        else{
+
+            return  <View
+                        style={{
+                            marginLeft: 20, 
+                            marginRight: 20, 
+                            flex: 1,
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center'
                         }}
-					/>
-                </ScrollView>
+                    >
+                        <PureChart data={this.props.data} type='pie' height={this.props.height} />
+                    </View>
+        }
     }
 
     render() {

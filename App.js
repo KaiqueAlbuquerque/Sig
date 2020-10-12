@@ -12,6 +12,7 @@ import HomeScreen from './scr/pages/Home/HomeScreen.js';
 import DemandsDetailScreen from './scr/pages/Demands/DemandsDetailScreen.js';
 import QrCodeScreen from './scr/pages/Demands/QrCodeScreen.js';
 import AgendaPedidos from './scr/pages/Pedidos/AgendaPedidos.js';
+import CrudKpi from './scr/pages/Home/CrudKPI.js';
 
 const RootStack = createStackNavigator(
   {
@@ -53,6 +54,12 @@ const RootStack = createStackNavigator(
     },
     AgendaPedidos: {
       screen: AgendaPedidos,
+      navigationOptions: () => ({
+        header: null
+      })
+    },
+    CrudKpi: {
+      screen: CrudKpi,
       navigationOptions: () => ({
         header: null
       })
