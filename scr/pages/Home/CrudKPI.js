@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import SectionedMultiSelect from 'react-native-sectioned-multi-select';
 import { Switch, 
+    ActivityIndicator,
     TouchableOpacity, 
     TouchableWithoutFeedback,
     StyleSheet,  
@@ -19,24 +20,6 @@ import RadioForm from 'react-native-simple-radio-button';
 import COLORS from '../../styles/Colors.js';
 import CrudService from '../../services/Crud/CrudService.js';
 const width = Dimensions.get('screen').width;
-
-var radio_props = [ 
-    {label: 'Cliente', value: 1 },
-    {label: 'Contato', value: 2 }, 
-    {label: 'Prioridade', value: 3 },
-    {label: 'Área', value: 4 }, 
-    {label: 'Categoria', value: 5 },
-    {label: 'Assunto', value: 6 }, 
-    {label: 'Status', value: 7 },
-    {label: 'Nível de Suporte', value: 8 }, 
-    {label: 'Produto', value: 9 },
-    {label: 'Operador', value: 10 }
-];
-
-var radio_props2 = [ 
-    {label: 'Linha', value: 1 }, 
-    {label: 'Barra', value: 2 }
-];
 
 export default class CrudKPI extends Component {
     constructor(props) {
@@ -87,7 +70,7 @@ export default class CrudKPI extends Component {
                     children: [
                         {
                             name: 'Todos',
-                            id: 0,
+                            id: -1,
                         },
                         {
                             name: 'Nível 1',
@@ -112,7 +95,7 @@ export default class CrudKPI extends Component {
                     children: [
                         {
                             name: 'Todos',
-                            id: 0,
+                            id: -1,
                         },
                         {
                             name: 'Aguardando Atendimento',
@@ -182,11 +165,13 @@ export default class CrudKPI extends Component {
             typePeriod: 0,
             title: "",
             height: "150",
+            width: "400",
             radio: 0,
             radio2: 0,
             data: this.props.navigation.state.params,
             initial: -1,
             initial2: 0,
+            isLoading: false
         };
     };
 
@@ -204,98 +189,254 @@ export default class CrudKPI extends Component {
         });
     }
     
-    onSelectedItemsChange = (selectedItems) => {
-        this.setState({ selectedItems });
-    };
-
     onSelectedItemsChangeClients = (selectedItems) => {
+        
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+        
         this.setState({ 
             multiClients: {
                 items: this.state.multiClients.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangeArea = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+
         this.setState({ 
             multiAreas: {
                 items: this.state.multiAreas.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangePriority = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+
         this.setState({ 
             priority: {
                 items: this.state.priority.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangeOperator = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+
         this.setState({ 
             operators: {
                 items: this.state.operators.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangeLevel = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+
         this.setState({ 
             level: {
                 items: this.state.level.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangeStatus = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+
         this.setState({ 
             status: {
                 items: this.state.status.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangeContact = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+
         this.setState({ 
             contacts: {
                 items: this.state.contacts.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangeCategory = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+
         this.setState({ 
             multiCategory: {
                 items: this.state.multiCategory.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangeSubject = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+
         this.setState({ 
             multiSubject: {
                 items: this.state.multiSubject.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     onSelectedItemsChangeProduct = (selectedItems) => {
+
+        if(selectedItems.includes(-1)){
+            selectedItems = [-1];
+        }
+        
         this.setState({ 
             products: {
                 items: this.state.products.items,
                 selectedItems: selectedItems
             } 
         });
+
+        if(selectedItems.length > 1){
+            this.setState({
+                height: "450"
+            })
+        }
+        else{
+            this.setState({
+                height: "150"
+            })
+        }
     };
 
     hideDatePicker = () => {
@@ -344,7 +485,7 @@ export default class CrudKPI extends Component {
         {
             clientInList.clientHelpDeskId = itemValue;
         }
-
+        
         if(itemValue != 0){
             let crudService = new CrudService();
 
@@ -360,7 +501,7 @@ export default class CrudKPI extends Component {
                                 children: [
                                     {
                                         name: 'Todos',
-                                        id: 0,
+                                        id: -1,
                                     },
                                     ...resultContacts.data.map((c, i) => {
                                         return {
@@ -438,7 +579,7 @@ export default class CrudKPI extends Component {
                                 children: [
                                     {
                                         name: 'Todos',
-                                        id: 0,
+                                        id: -1,
                                     },
                                     ...resultProducts.data.map((p, i) => {
     
@@ -461,7 +602,7 @@ export default class CrudKPI extends Component {
                                 ]
                             }
                         ],
-                        selectedItems: []
+                        selectedItems: arr
                     }
                 })
             }
@@ -569,7 +710,7 @@ export default class CrudKPI extends Component {
                                     children: [
                                         {
                                             name: 'Todas',
-                                            id: 0,
+                                            id: -1,
                                         },
                                         ...resultCategory.data.map((c, i) => {
                                             return {
@@ -683,7 +824,7 @@ export default class CrudKPI extends Component {
                                 children: [
                                     {
                                         name: 'Todos',
-                                        id: 0,
+                                        id: -1,
                                     },
                                     ...resultSubject.data.map((s, i) => {
                                         return {
@@ -751,8 +892,7 @@ export default class CrudKPI extends Component {
         }
     }
 
-    removeKPI = async () => {
-
+    confirmRemoveKPI = async () => {
         let crudService = new CrudService();
 
         let result = await crudService.delete(`kpi/${this.state.data.id}`, this.state.data.userData.token);
@@ -812,16 +952,38 @@ export default class CrudKPI extends Component {
                 ],
                 { cancelable: false }
             );
-        }        
+        }
     }
 
-    saveKPI = async () => {
+    removeKPI = () => {
 
+        Alert.alert(
+            "Remover KPI",
+            "Confirma exclusão do KPI?",
+            [
+                {
+                    text: "Não",
+                    style: "nok"
+                },
+                {
+                    text: "Sim",
+                    onPress: () => this.confirmRemoveKPI(),
+                    style: "ok"
+                }
+            ],
+            { cancelable: false }
+        );        
+    }
+
+    confirmSaveKPI = async () => {
         let idsCombo = "";
         let graphicType = 0;
         
         if(this.state.radio == 1){
-            idsCombo = this.state.multiClients.selectedItems.join();
+            
+            if(this.state.multiClients.selectedItems.length > 0){
+                idsCombo = this.state.multiClients.selectedItems.join();
+            }
 
             if(this.state.multiClients.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -833,7 +995,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 2){
-            idsCombo = `${this.state.client.selected};${this.state.contacts.selectedItems.join()}`;
+            
+            if(this.state.contacts.selectedItems.length > 0){
+                idsCombo = `${this.state.client.selected};${this.state.contacts.selectedItems.join()}`;
+            }
 
             if(this.state.contacts.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -845,7 +1010,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 3){
-            idsCombo = this.state.priority.selectedItems.join();
+            
+            if(this.state.priority.selectedItems.length > 0){
+                idsCombo = this.state.priority.selectedItems.join();
+            }
 
             if(this.state.priority.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -857,7 +1025,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 4){
-            idsCombo = this.state.multiAreas.selectedItems.join();
+            
+            if(this.state.multiAreas.selectedItems.length > 0){    
+                idsCombo = this.state.multiAreas.selectedItems.join();
+            }
 
             if(this.state.multiAreas.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -869,7 +1040,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 5){
-            idsCombo = `${this.state.area.selected};${this.state.multiCategory.selectedItems.join()}`;
+
+            if(this.state.multiCategory.selectedItems.length > 0){
+                idsCombo = `${this.state.area.selected};${this.state.multiCategory.selectedItems.join()}`;
+            }
 
             if(this.state.multiCategory.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -881,7 +1055,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 6){
-            idsCombo = `${this.state.area.selected};${this.state.category.selected};${this.state.multiSubject.selectedItems.join()}`;
+            
+            if(this.state.multiSubject.selectedItems.length > 0){
+                idsCombo = `${this.state.area.selected};${this.state.category.selected};${this.state.multiSubject.selectedItems.join()}`;
+            }
 
             if(this.state.multiSubject.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -893,7 +1070,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 7){
-            idsCombo = this.state.status.selectedItems.join();
+            
+            if(this.state.status.selectedItems.length > 0){
+                idsCombo = this.state.status.selectedItems.join();
+            }
 
             if(this.state.status.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -905,7 +1085,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 8){
-            idsCombo = this.state.level.selectedItems.join();
+            
+            if(this.state.level.selectedItems.length > 0){
+                idsCombo = this.state.level.selectedItems.join();
+            }
 
             if(this.state.level.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -917,7 +1100,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 9){
-            idsCombo = `${this.state.client.selected};${this.state.products.selectedItems.join()}`;
+            
+            if(this.state.products.selectedItems.length > 0){
+                idsCombo = `${this.state.client.selected};${this.state.products.selectedItems.join()}`;
+            }
 
             if(this.state.products.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -929,7 +1115,10 @@ export default class CrudKPI extends Component {
             }
         }
         else if(this.state.radio == 10){
-            idsCombo = this.state.operators.selectedItems.join();
+            
+            if(this.state.operators.selectedItems.length > 0){
+                idsCombo = this.state.operators.selectedItems.join();
+            }
 
             if(this.state.operators.selectedItems.length == 1){
                 if(this.state.radio2 == 0){
@@ -940,13 +1129,17 @@ export default class CrudKPI extends Component {
                 }
             }
         }
-
+        else if(this.state.radio == 11){
+            idsCombo = this.state.data.userData.userData.clientHelpDeskId;
+            graphicType = this.state.radio2;
+        }
+        
         let createKpi = {
             kpiId: this.state.data.id,
             personId: this.state.data.userData.userData.personId,
             signatureId: this.state.data.userData.userData.signatureId,
             idsCombo,
-            clients: this.state.radio == 1 ? true : false,
+            clients: this.state.radio == 1 ? true : this.state.radio == 11 ? true : false,
             contact: this.state.radio == 2 ? true : false,
             priority: this.state.radio == 3 ? true : false,
             sector: this.state.radio == 4 ? true : false,
@@ -961,6 +1154,7 @@ export default class CrudKPI extends Component {
             typePeriod: this.state.typePeriod,
             endDate: this.state.endDate.send == '' ? null : this.state.endDate.send,
             height: this.state.height,
+            width: this.state.width,
             title: this.state.title
         };
         
@@ -1013,7 +1207,6 @@ export default class CrudKPI extends Component {
                 [
                     {
                         text: "Ok",
-                        onPress: () => this.props.navigation.navigate('Home'),
                         style: "ok"
                     }
                 ],
@@ -1036,633 +1229,827 @@ export default class CrudKPI extends Component {
         }
     }
 
+    saveKPI = () => {
+        if(this.state.data.id == 0){
+            this.confirmSaveKPI();
+        }
+        else{
+            Alert.alert(
+                "Alterar KPI",
+                "Confirma alteração do KPI?",
+                [
+                    {
+                        text: "Não",
+                        style: "nok"
+                    },
+                    {
+                        text: "Sim",
+                        onPress: () => this.confirmSaveKPI(),
+                        style: "ok"
+                    }
+                ],
+                { cancelable: false }
+            );
+        }        
+    }
+
     render() {
+        var radio_props = this.state.data.userData.userData.userType == 1 ? [ 
+            {label: 'Cliente', value: 1 },
+            {label: 'Contato', value: 2 }, 
+            {label: 'Prioridade', value: 3 },
+            {label: 'Área', value: 4 }, 
+            {label: 'Categoria', value: 5 },
+            {label: 'Assunto', value: 6 }, 
+            {label: 'Status', value: 7 },
+            {label: 'Nível de Suporte', value: 8 }, 
+            {label: 'Produto', value: 9 },
+            {label: 'Operador', value: 10 }
+        ] : 
+        [
+            {label: 'Geral', value: 11 },
+            {label: 'Contato', value: 2 }, 
+            {label: 'Status', value: 7 },
+            {label: 'Produto', value: 9 }
+        ];
+
+        var radio_props2 = [ 
+            {label: 'Linha', value: 1 }, 
+            {label: 'Barra', value: 2 }
+        ];
+
         return (
             <>
-                <Header
-                    leftComponent={<TouchableWithoutFeedback onPress={() => this.props.navigation.navigate('Home')}>
-                                        <Icon
-                                            name='keyboard-backspace'
-                                            color='#fff'
-                                        />
-                                    </TouchableWithoutFeedback>
-                    }
-                    centerComponent={
-                        <Text h4 style={{textAlign: "center", color: "#fff" }}>
-                            KPI
-                        </Text>
-                    }
-                    containerStyle={{
-                        backgroundColor: COLORS.default,
-                        paddingTop: 0,
-                    }}
-                />
-                <View style={{flex: 1}}>
-                    <ScrollView>
-                        <View style={{flex: 5,alignItems: 'center'}}>
-                            <View style={{width: width * 0.8, marginTop: 15}}>
-                                <DateTimePickerModal
-                                    isVisible={this.state.isDatePickerVisible}
-                                    onConfirm={this.handleConfirm}
-                                    onCancel={this.hideDatePicker}
-                                    mode={'datetime'}
-                                    is24Hour={true}
-                                />
-
-                                <Text style={{marginBottom:5}}>Título:</Text>
-                                <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                    <TextInput style={styles.input} value={this.state.title} onChangeText={text => this.setState({title: text})}/>
-                                </View>
-
-                                <Text style={{marginBottom:5}}>Altura: (Default 150)</Text>
-                                <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                    <TextInput keyboardType='numeric' style={styles.input} value={this.state.height} onChangeText={text => this.setState({height: text})}/>
-                                </View>
-
-                                <Text style={{marginBottom:5}}>Data Fim:</Text>
-                                <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                        <TouchableOpacity onPress={() => this.showPicker()}>
-                                            <TextInput style={{ borderBottomWidth: 1,    
-                                                                borderBottomColor: '#ddd',
-                                                                width: 200,
-                                                                textAlign: 'center'
-                                                            }} 
-                                                editable={false}
-                                                value={this.state.endDate.show}/>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: 15, paddingBottom: 10}}>
-                                        <Text>Atual:</Text>
-                                        <Switch
-                                            disabled={this.state.today.disabled}
-                                            trackColor={{ false: "#767577", true: COLORS.default }}
-                                            thumbColor={this.state.today.isEnabled ? "#f5dd4b" : "#f4f3f4"}
-                                            ios_backgroundColor="#3e3e3e"
-                                            onValueChange={this.toggleSwitch}
-                                            value={this.state.today.isEnabled}
-                                        />
-                                    </View>
-                                </View>
-                                
-                                <Text style={{marginBottom:5}}>Tipo Período:</Text>
-                                <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                    <Picker
-                                        style={pickerStyle}
-                                        selectedValue={this.state.typePeriod}
-                                        onValueChange={(itemValue, itemIndex) =>
-                                            this.setState({typePeriod: itemValue})
-                                        }>
-                                            <Picker.Item key={0} value={0} label="DIA" />
-                                            <Picker.Item key={1} value={1} label="SEMANA" />
-                                            <Picker.Item key={2} value={2} label="MÊS" />
-                                            <Picker.Item key={3} value={3} label="ANO" />
-                                    </Picker>
-                                </View>
-                                
-                                <Text style={{marginBottom:5}}>Tipo de KPI:</Text>
-                                <RadioForm
-                                    ref={this.myRef}
-                                    radio_props={radio_props}
-                                    initial={this.state.initial}
-                                    formHorizontal={false}
-                                    labelHorizontal={true}
-                                    animation={true}
-                                    onPress={(value) => {this.setState({radio: value})}}
-                                    buttonSize={10}
-                                    labelStyle={{marginRight: 15}}
-                                />
-                                {
-                                    (this.state.radio == 1) && (
-                                        <>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.multiClients.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Clientes selecionados..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeClients}
-                                                    selectedItems={this.state.multiClients.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar clientes"
-                                                    selectedText="Selecionados"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-                                            
-                                            {
-                                                (this.state.multiClients.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={this.state.initial2}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 2) && (
-                                        <>
-                                            <Text style={{marginBottom:5, marginTop: 10}}>Cliente:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
-                                                <Picker
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.client.selected}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeClient(itemValue)
-                                                    }>
-                                                    {this.state.client.arrayCombo}
-                                                </Picker>
-                                            </View>
-
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.contacts.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Contatos selecionados..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeContact}
-                                                    selectedItems={this.state.contacts.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar contatos"
-                                                    selectedText="Selecionados"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-                                            
-                                            {
-                                                (this.state.contacts.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 3) && (
-                                        <>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.priority.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Prioridades selecionadas..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangePriority}
-                                                    selectedItems={this.state.priority.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar prioridades"
-                                                    selectedText="Selecionadas"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-
-                                            {
-                                                (this.state.priority.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 4) && (
-                                        <>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.multiAreas.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Áreas selecionadas..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeArea}
-                                                    selectedItems={this.state.multiAreas.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar áreas"
-                                                    selectedText="Selecionadas"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-                                            
-                                            {
-                                                (this.state.multiAreas.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 5) && (
-                                        <>
-                                            <Text style={{marginBottom:5}}>Área:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                                <Picker
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.area.selected}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeArea(itemValue)
-                                                    }>
-                                                    {this.state.area.arrayCombo}
-                                                </Picker>
-                                            </View>
-
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.multiCategory.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Categorias selecionadas..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeCategory}
-                                                    selectedItems={this.state.multiCategory.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar categorias"
-                                                    selectedText="Selecionadas"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-
-                                            {
-                                                (this.state.multiCategory.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 6) && (
-                                        <>
-                                            <Text style={{marginBottom:5}}>Área:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                                <Picker
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.area.selected}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeArea(itemValue)
-                                                    }>
-                                                    {this.state.area.arrayCombo}
-                                                </Picker>
-                                            </View>
-
-                                            <Text style={{marginBottom:5}}>Categoria:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
-                                                <Picker
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.category.selected}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeCategory(itemValue)
-                                                    }>
-                                                    {this.state.category.arrayCombo}
-                                                </Picker>
-                                            </View>
-
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.multiSubject.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Assuntos selecionados..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeSubject}
-                                                    selectedItems={this.state.multiSubject.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar assuntos"
-                                                    selectedText="Selecionados"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-
-                                            {
-                                                (this.state.multiSubject.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 7) && (
-                                        <>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.status.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Status selecionados..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeStatus}
-                                                    selectedItems={this.state.status.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar status"
-                                                    selectedText="Selecionados"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-                                            
-                                            {
-                                                (this.state.status.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 8) && (
-                                        <>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.level.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Níveis selecionados..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeLevel}
-                                                    selectedItems={this.state.level.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar níveis"
-                                                    selectedText="Selecionados"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-                                            
-                                            {
-                                                (this.state.level.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 9) && (
-                                        <>
-                                            <Text style={{marginBottom:5, marginTop: 10}}>Cliente:</Text>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
-                                                <Picker
-                                                    style={pickerStyle}
-                                                    selectedValue={this.state.client.selected}
-                                                    onValueChange={(itemValue, itemIndex) =>
-                                                        this.changeClient(itemValue)
-                                                    }>
-                                                    {this.state.client.arrayCombo}
-                                                </Picker>
-                                            </View>
-                                            
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.products.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Produtos selecionados..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeProduct}
-                                                    selectedItems={this.state.products.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar produtos"
-                                                    selectedText="Selecionados"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-
-                                            {
-                                                (this.state.products.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                {
-                                    (this.state.radio == 10) && (
-                                        <>
-                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
-                                                <SectionedMultiSelect
-                                                    items={this.state.operators.items}
-                                                    IconRenderer={MaterialIcons}
-                                                    uniqueKey="id"
-                                                    subKey="children"
-                                                    selectText="Operadores selecionados..."
-                                                    showDropDowns={true}
-                                                    readOnlyHeadings={true}
-                                                    onSelectedItemsChange={this.onSelectedItemsChangeOperator}
-                                                    selectedItems={this.state.operators.selectedItems}
-                                                    confirmText="Selecionar"
-                                                    searchPlaceholderText="Filtar operadores"
-                                                    selectedText="Selecionados"
-                                                    showCancelButton={true}
-                                                    showDropDowns={false}
-                                                    noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
-                                                    noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
-                                                />
-                                            </View>
-                                            
-                                            {
-                                                (this.state.operators.selectedItems.length == 1) && (
-                                                    <>
-                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
-                                                        <RadioForm
-                                                            radio_props={radio_props2}
-                                                            initial={0}
-                                                            formHorizontal={true}
-                                                            labelHorizontal={true}
-                                                            animation={true}
-                                                            onPress={(value) => {this.setState({radio2: value})}}
-                                                            buttonSize={10}
-                                                            labelStyle={{marginRight: 15}}
-                                                        />
-                                                    </>
-                                                )
-                                            }
-                                        </>
-                                    )
-                                }
-                                <View style={{flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10}}>
-                                    {
-                                        (this.state.data.id != 0) && (
-                                            <TouchableOpacity
-                                                style={styles.backButton}
-                                                activeOpacity = { .5 }
-                                                onPress={() => this.removeKPI()}
-                                            >
-                                                <Text style={styles.backText}>Excluir</Text>
-                                            </TouchableOpacity>
-                                        )
-                                    }
-                                
-                                    <TouchableOpacity
-                                        style={styles.nextButton}
-                                        activeOpacity = { .5 }
-                                        onPress={() => this.saveKPI()}
-                                    >
-                                        <Text style={styles.nextText}>{this.state.data.id == 0 ? "Salvar" : "Alterar"}</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
+                {
+                    this.state.isLoading && (
+                        <View style={styles.containerLoader}>
+                            <ActivityIndicator size="large" color={COLORS.default} />
                         </View>
-                    </ScrollView>
-                </View>
+                    )
+                }
+                {
+                    !this.state.isLoading && (
+                        <>
+                            <Header
+                                leftComponent={<TouchableWithoutFeedback onPress={() => this.props.navigation.navigate('Home')}>
+                                                    <Icon
+                                                        name='keyboard-backspace'
+                                                        color='#fff'
+                                                    />
+                                                </TouchableWithoutFeedback>
+                                }
+                                centerComponent={
+                                    <Text h4 style={{textAlign: "center", color: "#fff" }}>
+                                        KPI
+                                    </Text>
+                                }
+                                containerStyle={{
+                                    backgroundColor: COLORS.default,
+                                    paddingTop: 0,
+                                }}
+                            />
+                            <View style={{flex: 1}}>
+                                <ScrollView>
+                                    <View style={{flex: 5,alignItems: 'center'}}>
+                                        <View style={{width: width * 0.8, marginTop: 15}}>
+                                            <DateTimePickerModal
+                                                isVisible={this.state.isDatePickerVisible}
+                                                onConfirm={this.handleConfirm}
+                                                onCancel={this.hideDatePicker}
+                                                mode={'datetime'}
+                                                is24Hour={true}
+                                            />
+
+                                            <Text style={{marginBottom:5}}>Título:</Text>
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                <TextInput style={styles.input} value={this.state.title} onChangeText={text => this.setState({title: text})}/>
+                                            </View>
+
+                                            <Text style={{marginBottom:5}}>Altura:</Text>
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                <TextInput keyboardType='numeric' style={styles.input} value={this.state.height} onChangeText={text => this.setState({height: text})}/>
+                                            </View>
+
+                                            <Text style={{marginBottom:5}}>Data Fim:</Text>
+                                            <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                                                <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                    <TouchableOpacity onPress={() => this.showPicker()}>
+                                                        <TextInput style={{ borderBottomWidth: 1,    
+                                                                            borderBottomColor: '#ddd',
+                                                                            width: 200,
+                                                                            textAlign: 'center'
+                                                                        }} 
+                                                            editable={false}
+                                                            value={this.state.endDate.show}/>
+                                                    </TouchableOpacity>
+                                                </View>
+                                                <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', marginLeft: 15, paddingBottom: 10}}>
+                                                    <Text>Atual:</Text>
+                                                    <Switch
+                                                        disabled={this.state.today.disabled}
+                                                        trackColor={{ false: "#767577", true: COLORS.default }}
+                                                        thumbColor={this.state.today.isEnabled ? "#f5dd4b" : "#f4f3f4"}
+                                                        ios_backgroundColor="#3e3e3e"
+                                                        onValueChange={this.toggleSwitch}
+                                                        value={this.state.today.isEnabled}
+                                                    />
+                                                </View>
+                                            </View>
+                                            
+                                            <Text style={{marginBottom:5}}>Tipo Período:</Text>
+                                            <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                <Picker
+                                                    style={pickerStyle}
+                                                    selectedValue={this.state.typePeriod}
+                                                    onValueChange={(itemValue, itemIndex) =>
+                                                        this.setState({typePeriod: itemValue})
+                                                    }>
+                                                        <Picker.Item key={0} value={0} label="DIA" />
+                                                        <Picker.Item key={1} value={1} label="SEMANA" />
+                                                        <Picker.Item key={2} value={2} label="MÊS" />
+                                                        <Picker.Item key={3} value={3} label="ANO" />
+                                                </Picker>
+                                            </View>
+                                            
+                                            <Text style={{marginBottom:5}}>Tipo de KPI:</Text>
+                                            <RadioForm
+                                                ref={this.myRef}
+                                                radio_props={radio_props}
+                                                initial={this.state.initial}
+                                                formHorizontal={false}
+                                                labelHorizontal={true}
+                                                animation={true}
+                                                onPress={(value) => {this.setState({radio: value})}}
+                                                buttonSize={10}
+                                                labelStyle={{marginRight: 15}}
+                                            />
+                                            {
+                                                (this.state.radio == 1) && (
+                                                    <>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.multiClients.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Clientes selecionados..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeClients}
+                                                                selectedItems={this.state.multiClients.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar clientes"
+                                                                selectedText="Selecionados"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+                                                        
+                                                        {
+                                                            (this.state.multiClients.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={this.state.initial2}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.multiClients.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 2) && (
+                                                    <>
+                                                        {
+                                                            (this.state.data.userData.userData.userType == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5, marginTop: 10}}>Cliente:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
+                                                                        <Picker
+                                                                            style={pickerStyle}
+                                                                            selectedValue={this.state.client.selected}
+                                                                            onValueChange={(itemValue, itemIndex) =>
+                                                                                this.changeClient(itemValue)
+                                                                            }>
+                                                                            {this.state.client.arrayCombo}
+                                                                        </Picker>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.contacts.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Contatos selecionados..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeContact}
+                                                                selectedItems={this.state.contacts.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar contatos"
+                                                                selectedText="Selecionados"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+                                                        
+                                                        {
+                                                            (this.state.contacts.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.contacts.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 3) && (
+                                                    <>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.priority.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Prioridades selecionadas..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangePriority}
+                                                                selectedItems={this.state.priority.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar prioridades"
+                                                                selectedText="Selecionadas"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+
+                                                        {
+                                                            (this.state.priority.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.priority.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 4) && (
+                                                    <>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.multiAreas.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Áreas selecionadas..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeArea}
+                                                                selectedItems={this.state.multiAreas.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar áreas"
+                                                                selectedText="Selecionadas"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+                                                        
+                                                        {
+                                                            (this.state.multiAreas.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.multiAreas.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 5) && (
+                                                    <>
+                                                        <Text style={{marginBottom:5}}>Área:</Text>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                            <Picker
+                                                                style={pickerStyle}
+                                                                selectedValue={this.state.area.selected}
+                                                                onValueChange={(itemValue, itemIndex) =>
+                                                                    this.changeArea(itemValue)
+                                                                }>
+                                                                {this.state.area.arrayCombo}
+                                                            </Picker>
+                                                        </View>
+
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.multiCategory.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Categorias selecionadas..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeCategory}
+                                                                selectedItems={this.state.multiCategory.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar categorias"
+                                                                selectedText="Selecionadas"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+
+                                                        {
+                                                            (this.state.multiCategory.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.multiCategory.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 6) && (
+                                                    <>
+                                                        <Text style={{marginBottom:5}}>Área:</Text>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                            <Picker
+                                                                style={pickerStyle}
+                                                                selectedValue={this.state.area.selected}
+                                                                onValueChange={(itemValue, itemIndex) =>
+                                                                    this.changeArea(itemValue)
+                                                                }>
+                                                                {this.state.area.arrayCombo}
+                                                            </Picker>
+                                                        </View>
+
+                                                        <Text style={{marginBottom:5}}>Categoria:</Text>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                            <Picker
+                                                                style={pickerStyle}
+                                                                selectedValue={this.state.category.selected}
+                                                                onValueChange={(itemValue, itemIndex) =>
+                                                                    this.changeCategory(itemValue)
+                                                                }>
+                                                                {this.state.category.arrayCombo}
+                                                            </Picker>
+                                                        </View>
+
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.multiSubject.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Assuntos selecionados..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeSubject}
+                                                                selectedItems={this.state.multiSubject.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar assuntos"
+                                                                selectedText="Selecionados"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+
+                                                        {
+                                                            (this.state.multiSubject.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.multiSubject.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 7) && (
+                                                    <>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.status.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Status selecionados..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeStatus}
+                                                                selectedItems={this.state.status.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar status"
+                                                                selectedText="Selecionados"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+                                                        
+                                                        {
+                                                            (this.state.status.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.status.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 8) && (
+                                                    <>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.level.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Níveis selecionados..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeLevel}
+                                                                selectedItems={this.state.level.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar níveis"
+                                                                selectedText="Selecionados"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+                                                        
+                                                        {
+                                                            (this.state.level.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.level.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 9) && (
+                                                    <>
+                                                        {
+                                                            (this.state.data.userData.userData.userType == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5, marginTop: 10}}>Cliente:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>
+                                                                        <Picker
+                                                                            style={pickerStyle}
+                                                                            selectedValue={this.state.client.selected}
+                                                                            onValueChange={(itemValue, itemIndex) =>
+                                                                                this.changeClient(itemValue)
+                                                                            }>
+                                                                            {this.state.client.arrayCombo}
+                                                                        </Picker>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                        
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.products.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Produtos selecionados..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeProduct}
+                                                                selectedItems={this.state.products.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar produtos"
+                                                                selectedText="Selecionados"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+
+                                                        {
+                                                            (this.state.products.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.products.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 10) && (
+                                                    <>
+                                                        <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10, marginTop: 10, paddingBottom: 10}}> 
+                                                            <SectionedMultiSelect
+                                                                items={this.state.operators.items}
+                                                                IconRenderer={MaterialIcons}
+                                                                uniqueKey="id"
+                                                                subKey="children"
+                                                                selectText="Operadores selecionados..."
+                                                                showDropDowns={true}
+                                                                readOnlyHeadings={true}
+                                                                onSelectedItemsChange={this.onSelectedItemsChangeOperator}
+                                                                selectedItems={this.state.operators.selectedItems}
+                                                                confirmText="Selecionar"
+                                                                searchPlaceholderText="Filtar operadores"
+                                                                selectedText="Selecionados"
+                                                                showCancelButton={true}
+                                                                showDropDowns={false}
+                                                                noResultsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item correspondente a pesquisa</Text>}
+                                                                noItemsComponent={<Text style={{marginTop: 10, textAlign: 'center'}}>Nenhum item</Text>}
+                                                            />
+                                                        </View>
+                                                        
+                                                        {
+                                                            (this.state.operators.selectedItems.length == 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                                    <RadioForm
+                                                                        radio_props={radio_props2}
+                                                                        initial={0}
+                                                                        formHorizontal={true}
+                                                                        labelHorizontal={true}
+                                                                        animation={true}
+                                                                        onPress={(value) => {this.setState({radio2: value})}}
+                                                                        buttonSize={10}
+                                                                        labelStyle={{marginRight: 15}}
+                                                                    />
+                                                                </>
+                                                            )
+                                                        }
+                                                        {
+                                                            (this.state.operators.selectedItems.length > 1) && (
+                                                                <>
+                                                                    <Text style={{marginBottom:5}}>Largura:</Text>
+                                                                    <View style={{borderRadius: 10, borderWidth: 1, borderColor: '#bdc3c7', overflow: 'hidden', marginBottom: 10}}>                
+                                                                        <TextInput keyboardType='numeric' style={styles.input} value={this.state.width} onChangeText={text => this.setState({width: text})}/>
+                                                                    </View>
+                                                                </>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {
+                                                (this.state.radio == 11) && (
+                                                    <>
+                                                        <Text style={{marginBottom:5}}>Tipo de Gráfico:</Text>
+                                                        <RadioForm
+                                                            radio_props={radio_props2}
+                                                            initial={0}
+                                                            formHorizontal={true}
+                                                            labelHorizontal={true}
+                                                            animation={true}
+                                                            onPress={(value) => {this.setState({radio2: value})}}
+                                                            buttonSize={10}
+                                                            labelStyle={{marginRight: 15}}
+                                                        />
+                                                    </>
+                                                )
+                                            }
+                                            <View style={{flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10}}>
+                                                {
+                                                    (this.state.data.id != 0) && (
+                                                        <TouchableOpacity
+                                                            style={styles.backButton}
+                                                            activeOpacity = { .5 }
+                                                            onPress={() => this.removeKPI()}
+                                                        >
+                                                            <Text style={styles.backText}>Excluir</Text>
+                                                        </TouchableOpacity>
+                                                    )
+                                                }
+                                            
+                                                <TouchableOpacity
+                                                    style={styles.nextButton}
+                                                    activeOpacity = { .5 }
+                                                    onPress={() => this.saveKPI()}
+                                                >
+                                                    <Text style={styles.nextText}>{this.state.data.id == 0 ? "Salvar" : "Alterar"}</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    </View>
+                                </ScrollView>
+                            </View>
+                        </>
+                    )
+                }
             </>
         );
     }
 
     async componentDidMount(){
-        
+
+        this.setState({
+            isLoading: true
+        });
+
         let crudService = new CrudService();
         
         let resultClients = await crudService.get(`comboDemands/getComboClients/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
@@ -1687,7 +2074,7 @@ export default class CrudKPI extends Component {
                             children: [
                                 {
                                     name: 'Todos',
-                                    id: 0,
+                                    id: -1,
                                 },
                                 ...resultClients.data.map((c, i) => {
                                     return {
@@ -1744,233 +2131,240 @@ export default class CrudKPI extends Component {
                 { cancelable: false }
             );
         }
-
-        let resultAreas = await crudService.get(`comboDemands/getComboAreaFilter/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
+        
+        if(this.state.data.userData.userData.userType == 1)
+        {
+            let resultAreas = await crudService.get(`comboDemands/getComboAreaFilter/${this.state.data.userData.userData.personId}`, this.state.data.userData.token);
 			
-        if(resultAreas.status == 200){
-            this.setState({
-                area: {
-                    array: [...resultAreas.data],
-                    selected: 0,
-                }
-            }, () => {
+            if(resultAreas.status == 200){
                 this.setState({
                     area: {
                         array: [...resultAreas.data],
-                        selected: this.state.area.selected,
-                        arrayCombo: [
-                            <Picker.Item key={0} value={0} label={`SELECIONE A ÁREA`} />,
-                            resultAreas.data.map((a, i) => {
-                                return <Picker.Item key={i} value={a.areaId} label={a.areaName} />
-                            })
-                        ]
-                    },
-                    multiAreas: {
+                        selected: 0,
+                    }
+                }, () => {
+                    this.setState({
+                        area: {
+                            array: [...resultAreas.data],
+                            selected: this.state.area.selected,
+                            arrayCombo: [
+                                <Picker.Item key={0} value={0} label={`SELECIONE A ÁREA`} />,
+                                resultAreas.data.map((a, i) => {
+                                    return <Picker.Item key={i} value={a.areaId} label={a.areaName} />
+                                })
+                            ]
+                        },
+                        multiAreas: {
+                            items: [
+                                {
+                                    name: 'Áreas',
+                                    id: 0,
+                                    children: [
+                                        {
+                                            name: 'Todas',
+                                            id: -1,
+                                        },
+                                        ...resultAreas.data.map((a, i) => {
+                                            return {
+                                                name: a.areaName,
+                                                id: a.areaId
+                                            }
+                                        })
+                                    ]
+                                }
+                            ],
+                            selectedItems: this.state.multiAreas.selectedItems
+                        },
+                    })
+                });
+            }
+            else if(resultAreas.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else if(resultAreas.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultAreas.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('Home'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('Home'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            
+            let resultPriority = await crudService.get(`comboDemands/getComboPriority/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
+            
+            if(resultPriority.status == 200){
+                this.setState({
+                    priority: {
                         items: [
                             {
-                                name: 'Áreas',
+                                name: 'Prioridades',
                                 id: 0,
                                 children: [
                                     {
                                         name: 'Todas',
-                                        id: 0,
+                                        id: -1,
                                     },
-                                    ...resultAreas.data.map((a, i) => {
+                                    ...resultPriority.data.map((p, i) => {
                                         return {
-                                            name: a.areaName,
-                                            id: a.areaId
+                                            name: p.description,
+                                            id: p.priorityId
                                         }
                                     })
                                 ]
                             }
                         ],
-                        selectedItems: this.state.multiAreas.selectedItems
+                        selectedItems: this.state.priority.selectedItems
                     },
                 })
-            });
-        }
-        else if(resultAreas.status == 401){
-            Alert.alert(
-                "Sessão Expirada",
-                "Sua sessão expirou. Por favor, realize o login novamente.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('LoginEmail'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else if(resultAreas.status == 400){
-            Alert.alert(
-                "Erro",
-                resultAreas.data[0],
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('Home'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else{
-            Alert.alert(
-                "Erro",
-                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('Home'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        
-        let resultPriority = await crudService.get(`comboDemands/getComboPriority/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
-        
-        if(resultPriority.status == 200){
-            this.setState({
-                priority: {
-                    items: [
+            }
+            else if(resultPriority.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
                         {
-                            name: 'Prioridades',
-                            id: 0,
-                            children: [
-                                {
-                                    name: 'Todas',
-                                    id: 0,
-                                },
-                                ...resultPriority.data.map((p, i) => {
-                                    return {
-                                        name: p.description,
-                                        id: p.priorityId
-                                    }
-                                })
-                            ]
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
+                            style: "ok"
                         }
                     ],
-                    selectedItems: this.state.priority.selectedItems
-                },
-            })
-        }
-        else if(resultPriority.status == 401){
-            Alert.alert(
-                "Sessão Expirada",
-                "Sua sessão expirou. Por favor, realize o login novamente.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('LoginEmail'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else if(resultPriority.status == 400){
-            Alert.alert(
-                "Erro",
-                resultPriority.data[0],
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('Home'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else{
-            Alert.alert(
-                "Erro",
-                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('Home'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
+                    { cancelable: false }
+                );
+            }
+            else if(resultPriority.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultPriority.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('Home'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('Home'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
 
-        let resultOperators = await crudService.get(`comboDemands/getComboOperatorsFilter/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
-    
-        if(resultOperators.status == 200){
-            
-            this.setState({
-                operators: {
-                    items: [
+            let resultOperators = await crudService.get(`comboDemands/getComboOperatorsFilter/${this.state.data.userData.userData.signatureId}`, this.state.data.userData.token);
+        
+            if(resultOperators.status == 200){
+                
+                this.setState({
+                    operators: {
+                        items: [
+                            {
+                                name: 'Operadores',
+                                id: 0,
+                                children: [
+                                    {
+                                        name: 'Todos',
+                                        id: -1,
+                                    },
+                                    ...resultOperators.data.map((o, i) => {
+                                        return {
+                                            name: o.operatorName,
+                                            id: o.operatorId
+                                        }
+                                    })
+                                ]
+                            }
+                        ],
+                        selectedItems: this.state.operators.selectedItems
+                    },
+                })
+            }
+            else if(resultOperators.status == 401){
+                Alert.alert(
+                    "Sessão Expirada",
+                    "Sua sessão expirou. Por favor, realize o login novamente.",
+                    [
                         {
-                            name: 'Operadores',
-                            id: 0,
-                            children: [
-                                {
-                                    name: 'Todos',
-                                    id: 0,
-                                },
-                                ...resultOperators.data.map((o, i) => {
-                                    return {
-                                        name: o.operatorName,
-                                        id: o.operatorId
-                                    }
-                                })
-                            ]
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('LoginEmail'),
+                            style: "ok"
                         }
                     ],
-                    selectedItems: this.state.operators.selectedItems
-                },
-            })
+                    { cancelable: false }
+                );
+            }
+            else if(resultOperators.status == 400){
+                Alert.alert(
+                    "Erro",
+                    resultOperators.data[0],
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('Home'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
+            else{
+                Alert.alert(
+                    "Erro",
+                    "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
+                    [
+                        {
+                            text: "Ok",
+                            onPress: () => this.props.navigation.navigate('Home'),
+                            style: "ok"
+                        }
+                    ],
+                    { cancelable: false }
+                );
+            }
         }
-        else if(resultOperators.status == 401){
-            Alert.alert(
-                "Sessão Expirada",
-                "Sua sessão expirou. Por favor, realize o login novamente.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('LoginEmail'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else if(resultOperators.status == 400){
-            Alert.alert(
-                "Erro",
-                resultOperators.data[0],
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('Home'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
-        }
-        else{
-            Alert.alert(
-                "Erro",
-                "Ocorreu um erro inesperado. Por favor, tente novamente mais tarde.",
-                [
-                    {
-                        text: "Ok",
-                        onPress: () => this.props.navigation.navigate('Home'),
-                        style: "ok"
-                    }
-                ],
-                { cancelable: false }
-            );
+        else
+        {
+            this.changeClient(this.state.data.userData.userData.clientHelpDeskId, [], false);
         }
 
         let idKpi = this.state.data.id;
@@ -1979,19 +2373,44 @@ export default class CrudKPI extends Component {
             let kpi = await crudService.get(`kpi/getKpi/${idKpi}`, this.state.data.userData.token);
     
             if(kpi.status == 200){
+                
+                let selected = (kpi.data.clients && this.state.data.userData.userData.userType == 1) ? 1 : kpi.data.contact ? 2 : kpi.data.priority ? 3 : kpi.data.sector ? 4 : kpi.data.category ? 5 : kpi.data.subject ? 6 : kpi.data.status ? 7 : kpi.data.supportLevel ? 8 : kpi.data.product ? 9 : kpi.data.operator ? 10 : 11;
+                let initialSelected = 0;
 
-                let selected = kpi.data.clients ? 1 : kpi.data.contact ? 2 : kpi.data.priority ? 3 : kpi.data.sector ? 4 : kpi.data.category ? 5 : kpi.data.subject ? 6 : kpi.data.status ? 7 : kpi.data.supportLevel ? 8 : kpi.data.product ? 9 : 10;
-
-                this.myRef.current.updateIsActiveIndex(selected - 1);
+                if(this.state.data.userData.userData.userType == 2)
+                {
+                    //this.myRef.current.updateIsActiveIndex(0);
+                    if(selected == 11)
+                    {
+                        initialSelected = 0;
+                    }
+                    else if(selected == 2)
+                    {
+                        initialSelected = 1;
+                    }
+                    else if(selected == 7)
+                    {
+                        initialSelected = 2;
+                    }
+                    else if(selected == 9)
+                    {
+                        initialSelected = 3;
+                    }
+                }
+                else
+                {
+                    initialSelected = selected - 1;
+                }
 
                 this.setState({
+                    width: kpi.data.width != null ? kpi.data.width.toString() : "0",
                     height: kpi.data.height.toString(),
                     title: kpi.data.title,
-                    initial: selected,
+                    initial: initialSelected,
                     radio: selected,
                     typePeriod: kpi.data.typePeriod,
-                    initial2: kpi.data.typePeriod,
-                    radio2: kpi.data.typePeriod,
+                    initial2: kpi.data.graphicType - 1,
+                    radio2: kpi.data.graphicType,
                     today: {
                         isEnabled: kpi.data.today,
                         disabled: this.state.today.disabled
@@ -2055,7 +2474,7 @@ export default class CrudKPI extends Component {
                     })   
                 }
                 else if(selected == 9){
-                    
+                    this.changeClient(parseInt(arrCombos[0]), arrCombos[1].split`,`.map(x=>+x), false);
                 }
                 else if(selected == 10){
                     this.setState({
@@ -2109,6 +2528,10 @@ export default class CrudKPI extends Component {
                 );
             }
         }
+
+        this.setState({
+            isLoading: false
+        });
     }
 }
 
@@ -2173,5 +2596,9 @@ const styles = StyleSheet.create({
     backText: {
         color: '#fff',
         textAlign:'center'
-    }  
+    },
+    containerLoader: {
+        flex: 1,
+        justifyContent: "center"
+    }
 });

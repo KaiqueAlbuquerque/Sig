@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     form: {
         flex: 1,
         width: width * 0.8,
-        marginBottom: 25
+        marginBottom: 50
     },
     labelForm: {
         marginBottom: 5
