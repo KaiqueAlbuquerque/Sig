@@ -49,6 +49,9 @@ class MyListItem extends PureComponent {
 					<Text>
 						<Text style={styles.textBold}>Status:</Text> {this.props.item.status}
 					</Text>
+					<Text>
+						<Text style={styles.textBold}>Assunto:</Text> {this.props.item.subject}
+					</Text>
 				</Card>
 			</TouchableOpacity>
 	  	)
